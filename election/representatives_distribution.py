@@ -5,8 +5,8 @@ Calculates the distribution of the 169 representatives in 2017
 """
 
 import pandas as pd
-from country import County
-from voting import Nation
+from election.country import County
+from election.voting import Nation
 import copy
 
 # %%
@@ -20,7 +20,7 @@ st_lagues = 1
 
 counties = []
 for k, row in df.iterrows():
-    counties.append(County(name=row[0], population=row[1], area=row[3]))
+    counties.append(County(name=row["Fylke"], population=row["befolkning"], area=row["areal"]))
 County.set_parameters({"st_lagues_factor": st_lagues})
 
 v2 = Nation(counties=copy.deepcopy(counties))

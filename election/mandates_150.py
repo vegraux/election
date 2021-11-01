@@ -5,8 +5,8 @@ Calculates the 150 district mandates
 """
 
 import pandas as pd
-from country import County, Party
-from voting import Nation
+from election.country import County, Party
+from election.voting import Nation
 import copy
 
 #%%

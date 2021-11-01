@@ -4,7 +4,7 @@
 
 """
 
-from country import County, Party
+from election.country import County, Party
 import pytest
 
 __author__ = "Vegard Solberg"
