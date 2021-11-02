@@ -5,15 +5,15 @@ from election.voting import Nation
 
 
 @pytest.fixture
-def county1():
+def district1():
     return District(area=100, population=100, name="foo1")
 
 
 @pytest.fixture
-def county2():
+def district2():
     return District(area=1000, population=1000, name="foo2")
 
 
 @pytest.fixture
-def nation(county1, county2):
-    return Nation(counties=[county1, county2])
+def nation(district1, district2):
+    return Nation(districts=[district1, district2])

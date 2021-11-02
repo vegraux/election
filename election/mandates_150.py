@@ -24,10 +24,10 @@ for k, row in df.iterrows():
 District.set_parameters({"st_lagues_factor": st_lagues})
 Party.set_parameters({"st_lagues_factor": st_lagues})
 
-norway = Nation(counties=copy.deepcopy(counties))
+norway = Nation(districts=copy.deepcopy(counties))
 norway.calc_representatives()
 
-# Read in the votes in each county
+# Read in the votes in each district
 
 votes_raw = pd.read_excel("tabell.xlsx", sheet_name="stemmer", index=1)
 votes = votes_raw.iloc[:, 1:-1]  # fylker er kolonner, parti er index, stemmer er verdier
@@ -36,10 +36,13 @@ votes = votes.fillna(value=0, axis=0)
 
 parties = votes.index
 
-for county in norway.counties:
-    county_votes = votes[county.name]
-    county.add_parties(
-        [Party(name=county_votes.index[k], votes=p_votes) for k, p_votes in enumerate(county_votes)]
+for district in norway.districts:
+    district_votes = votes[district.name]
+    district.add_parties(
+        [
+            Party(name=district_votes.index[k], votes=p_votes)
+            for k, p_votes in enumerate(district_votes)
+        ]
     )
 
 norway.calc_rep_distribution(method="modified")

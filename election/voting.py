@@ -14,20 +14,20 @@ from election.district import District
 
 class Nation:
     def __init__(
-        self, counties: List[District] = None, cutoff: float = 4, method: str = "modified"
+        self, districts: List[District] = None, cutoff: float = 4, method: str = "modified"
     ):
         self.cutoff = cutoff
-        self.counties = counties if counties is not None else []
+        self.districts = districts if districts is not None else []
         self.method = method
 
     def calc_representatives(self, tot_rep=150):
-        for county in self.counties:
-            county.add_leveling_seat()
+        for district in self.districts:
+            district.add_leveling_seat()
 
         for _ in range(tot_rep):
-            self.counties.sort(key=lambda x: x.quotient, reverse=True)
-            aquiring_county = self.counties[0]
-            aquiring_county.representatives += 1
+            self.districts.sort(key=lambda x: x.quotient, reverse=True)
+            acquiring_district = self.districts[0]
+            acquiring_district.representatives += 1
 
     def calc_rep_distribution(self, method="modified"):
         """
@@ -36,29 +36,31 @@ class Nation:
         :return:
         """
 
-        for county in self.counties:
-            county.calc_representatives(method=method)
+        for district in self.districts:
+            district.calc_representatives(method=method)
 
     def represented_parties(self):
         reps_parties = []
-        for county in self.counties:
-            county_parties = county.parties_with_reps()
-            for p in county_parties:
+        for district in self.districts:
+            district_parties = district.parties_with_reps()
+            for p in district_parties:
                 if p not in reps_parties:
                     reps_parties.append(p)
 
         return reps_parties
 
     def district_quotient(self):
-        data = [{"name": county.name, "quotient": county.quotient} for county in self.counties]
+        data = [
+            {"name": district.name, "quotient": district.quotient} for district in self.districts
+        ]
         df = pd.DataFrame(data)
         return df.set_index("name")
 
     def district_representatives(self):
-        self.counties.sort(key=lambda x: x.name)
+        self.districts.sort(key=lambda x: x.name)
         data = [
-            {"name": county.name, "representatives": county.representatives}
-            for county in self.counties
+            {"name": district.name, "representatives": district.representatives}
+            for district in self.districts
         ]
         df = pd.DataFrame(data)
         return df.set_index("name")
@@ -71,25 +73,25 @@ class Nation:
         rep_parties = self.represented_parties()
         df_list = []
         index = []
-        for county in self.counties:
-            index.append(county.name)
-            for party in county.parties:
+        for district in self.districts:
+            index.append(district.name)
+            for party in district.parties:
                 if party.name in rep_parties:
                     df_list.append(
                         {
                             "Party": party.name,
-                            "County": county.name,
+                            "District": district.name,
                             "Representatives": party.representatives,
                         }
                     )
 
         df = pd.DataFrame(df_list)
-        df = df.pivot(index="County", columns="Party", values="Representatives")
+        df = df.pivot(index="District", columns="Party", values="Representatives")
         return df
 
     def make_dataframe(self):
         """
-        makes dataframe for each party's mandates in every county
+        makes dataframe for each party's mandates in every district
         :return:
         """
         pass

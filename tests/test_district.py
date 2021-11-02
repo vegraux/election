@@ -9,27 +9,29 @@ import pytest
 from election.district import District, Party
 
 
-class TestCounty:
-    def test_county_add_representative(self, county1):
+class TestDistrict:
+    def test_county_add_representative(self, district1):
         """
         The division number should change when the number of representatives increase
         """
-        div_num0 = county1.quotient
-        county1.representatives += 1
-        div_num1 = county1.quotient
+        div_num0 = district1.quotient
+        district1.representatives += 1
+        div_num1 = district1.quotient
         assert div_num0 > div_num1
 
-    def test_correct_div_num_modified(self, county1):
-        county1.method = "modified"
-        assert county1.quotient == (100 + 100 * 1.8) / 1.4  # divide with 1.4 with modified version
-        county1.representatives = 3
-        assert county1.quotient == (100 + 100 * 1.8) / 7
+    def test_correct_div_num_modified(self, district1):
+        district1.method = "modified"
+        assert (
+            district1.quotient == (100 + 100 * 1.8) / 1.4
+        )  # divide with 1.4 with modified version
+        district1.representatives = 3
+        assert district1.quotient == (100 + 100 * 1.8) / 7
 
-    def test_correct_div_num_normal(self, county1):
-        county1.method = "normal"
-        assert county1.quotient == 100 + 100 * 1.8
-        county1.representatives = 5
-        assert county1.quotient == (100 + 100 * 1.8) / 11
+    def test_correct_div_num_normal(self, district1):
+        district1.method = "normal"
+        assert district1.quotient == 100 + 100 * 1.8
+        district1.representatives = 5
+        assert district1.quotient == (100 + 100 * 1.8) / 11
 
     def test_county_name_area(self):
         with pytest.raises(ValueError):
@@ -64,7 +66,7 @@ class TestCounty:
 
         c1.add_parties([p1, p2])
 
-        assert c1.count_county_votes() == 500
+        assert c1.count_district_votes() == 500
 
 
 class TestParty:

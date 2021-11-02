@@ -25,9 +25,9 @@ class District:
     def __init__(self, area: float, population: int, name: str, method: str = "normal"):
         """
 
-        :param area: area of county in km2
-        :param population: nr of inhabitants in county
-        :param name: name of county
+        :param area: area of district in km2
+        :param population: nr of inhabitants in district
+        :param name: name of district
         :param method: method to calculate division number
 
         """
@@ -76,7 +76,7 @@ class District:
         for party in parties:
             self.parties.append(party)
 
-    def count_county_votes(self):
+    def count_district_votes(self):
         return sum([p._votes for p in self.parties])
 
     def calc_quotient(self):
@@ -94,7 +94,7 @@ class District:
 
     def calc_representatives(self, method="modified"):
         """
-        Calculates each party's representatives in that county
+        Calculates each party's representatives in that district
         """
 
         if method == "modified":
