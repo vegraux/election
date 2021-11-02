@@ -5,9 +5,6 @@
 """
 import copy
 
-__author__ = "Vegard Solberg"
-__email__ = "vegard.ulriksen.solberg@nmbu.no"
-
 
 class District:
     parameters = {

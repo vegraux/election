@@ -4,8 +4,6 @@
 
 """
 
-__author__ = "Vegard Solberg"
-__email__ = "vegard.ulriksen.solberg@nmbu.no"
 
 from typing import List
 

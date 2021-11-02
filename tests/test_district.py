@@ -8,9 +8,6 @@ import pytest
 
 from election.district import District, Party
 
-__author__ = "Vegard Solberg"
-__email__ = "vegard.ulriksen.solberg@nmbu.no"
-
 
 class TestCounty:
     def test_county_add_representative(self, county1):

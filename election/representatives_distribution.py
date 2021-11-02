@@ -11,10 +11,6 @@ import pandas as pd
 from election.district import District
 from election.voting import Nation
 
-# %%
-__author__ = "Vegard Solberg"
-__email__ = "vegard.ulriksen.solberg@nmbu.no"
-
 df = pd.read_excel("tabell.xlsx", skiprows=[0, 1, 2])
 df = df.iloc[:, :4]
 
