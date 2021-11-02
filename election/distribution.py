@@ -5,10 +5,10 @@ Created on Fri Jun  1 13:09:09 2018
 @author: vegar
 """
 
-import pandas as pd
-import numpy as np
 import copy
 
+import numpy as np
+import pandas as pd
 
 df = pd.read_excel("tabell.xlsx", skiprows=[0, 1, 2])
 
@@ -37,10 +37,7 @@ for _ in range(169):
 df["mandater_real"] = mand
 # df['mandater_real'] += 1
 print(df[["Fylke", "mandater_real"]])
-#%%
 # Regner ut de 150 distriktsmandatene
-import copy
-
 
 res_raw = pd.read_excel("tabell.xlsx", sheet_name="stemmer", index=1)
 data = res_raw.iloc[:, 1:-1]  # fylker er kolonner, parti er index, stemmer er verdier
@@ -49,9 +46,7 @@ data = data.fillna(value=0, axis=0)
 
 partier = data.index
 
-M = pd.DataFrame(
-    np.zeros_like(data.values), columns=fylker
-)  # her skal mandatene oppdateres
+M = pd.DataFrame(np.zeros_like(data.values), columns=fylker)  # her skal mandatene oppdateres
 
 
 M.index = partier
@@ -73,7 +68,6 @@ for k, fylke in enumerate(fylker):
 
 # Mt = M.transpose().iloc[::-1]
 
-#%%
 # Fordeling av utgjevningsmandatene
 partisum = data.sum(axis=1)
 partisum = partisum.drop(index=["Blanke"])
@@ -97,18 +91,14 @@ while overrep:  # forsett så lenge det er overrepresentert partier
     stemmetall = copy.copy(upartisum)
     stemmetall = stemmetall / 1.4
 
-    rep_U = int(
-        M.sum(axis=1)[upartier].sum()
-    )  # antall mandater for parti over sperregrensa
+    rep_U = int(M.sum(axis=1)[upartier].sum())  # antall mandater for parti over sperregrensa
     for _ in range(rep_U + 19):
         i = stemmetall.values.argmax()
         Mu["Umandater"][i] += 1
         n = int(Mu["Umandater"][i])
         stemmetall[i] = upartisum[i] / (deletall[n])
 
-    diffU = (
-        Mu["Umandater"] - M.sum(axis=1)[upartier]
-    )  # antall utgjevningsmand per parti
+    diffU = Mu["Umandater"] - M.sum(axis=1)[upartier]  # antall utgjevningsmand per parti
 
     if all(diffU >= 0):  # bryter hvis ingen parti er overrepresentert
         overrep = False

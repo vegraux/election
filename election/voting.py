@@ -6,28 +6,30 @@
 
 __author__ = "Vegard Solberg"
 __email__ = "vegard.ulriksen.solberg@nmbu.no"
+
+from typing import List
+
 import pandas as pd
+
+from election.district import District
 
 
 class Nation:
-    def __init__(self, counties=None, cutoff=4):
+    def __init__(
+        self, counties: List[District] = None, cutoff: float = 4, method: str = "modified"
+    ):
         self.cutoff = cutoff
-        if counties is None:
-            self.counties = []
+        self.counties = counties if counties is not None else []
+        self.method = method
 
-        else:
-            self.counties = counties
-
-    def calc_representatives(self, method="normal", tot_rep=169):
-
-        if method == "modified":
-            for county in self.counties:
-                county.divide_nr = county.calc_div_nr(method="modified")
+    def calc_representatives(self, tot_rep=150):
+        for county in self.counties:
+            county.add_leveling_seat()
 
         for _ in range(tot_rep):
-            self.counties.sort(key=lambda x: x.divide_nr, reverse=True)
-            self.counties[0].representatives += 1
-            self.counties[0].divide_nr = self.counties[0].calc_div_nr(method=method)
+            self.counties.sort(key=lambda x: x.quotient, reverse=True)
+            aquiring_county = self.counties[0]
+            aquiring_county.representatives += 1
 
     def calc_rep_distribution(self, method="modified"):
         """
@@ -49,6 +51,20 @@ class Nation:
 
         return reps_parties
 
+    def district_quotient(self):
+        data = [{"name": county.name, "quotient": county.quotient} for county in self.counties]
+        df = pd.DataFrame(data)
+        return df.set_index("name")
+
+    def district_representatives(self):
+        self.counties.sort(key=lambda x: x.name)
+        data = [
+            {"name": county.name, "representatives": county.representatives}
+            for county in self.counties
+        ]
+        df = pd.DataFrame(data)
+        return df.set_index("name")
+
     def national_mandates_count(self):
         """
         Creates a dataframe with the results of the election
@@ -58,13 +74,13 @@ class Nation:
         df_list = []
         index = []
         for county in self.counties:
-            index.append(county._name)
+            index.append(county.name)
             for party in county.parties:
-                if party._name in rep_parties:
+                if party.name in rep_parties:
                     df_list.append(
                         {
-                            "Party": party._name,
-                            "County": county._name,
+                            "Party": party.name,
+                            "County": county.name,
                             "Representatives": party.representatives,
                         }
                     )
