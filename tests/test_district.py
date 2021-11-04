@@ -51,8 +51,8 @@ class TestDistrict:
 
     def test_add_parties(self):
         c1 = District(name="Finnmark", area=123, population=3421)
-        p1 = Party(name="SV", votes=2354)
-        p2 = Party(name="FRP", votes=654)
+        p1 = Party(name="SV", votes=2354, district="Finnmark")
+        p2 = Party(name="FRP", votes=654, district="Finnmark")
 
         assert c1.parties is None
         c1.add_parties([p1, p2])
@@ -61,8 +61,8 @@ class TestDistrict:
 
     def test_county_votes(self):
         c1 = District(name="Finnmark", area=123, population=3421)
-        p1 = Party(name="SV", votes=200)
-        p2 = Party(name="FRP", votes=300)
+        p1 = Party(name="Sosialistisk venstreparti", votes=200, district="Finnmark")
+        p2 = Party(name="FRP", votes=300, district="Finnmark")
 
         c1.add_parties([p1, p2])
 

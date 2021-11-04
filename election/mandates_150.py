@@ -25,7 +25,7 @@ District.set_parameters({"st_lagues_factor": st_lagues})
 Party.set_parameters({"st_lagues_factor": st_lagues})
 
 norway = Nation(districts=copy.deepcopy(counties))
-norway.calc_representatives()
+norway.calc_district_representatives()
 
 # Read in the votes in each district
 

@@ -4,7 +4,6 @@
 
 """
 
-
 from typing import List
 
 import pandas as pd
@@ -20,7 +19,12 @@ class Nation:
         self.districts = districts if districts is not None else []
         self.method = method
 
-    def calc_representatives(self, tot_rep=150):
+    def calc_district_representatives(self, tot_rep: int = 150):
+        """
+        Distribute total national representatives to the districts
+        :param tot_rep: Total number of ordinary representatives
+        :return:
+        """
         for district in self.districts:
             district.add_leveling_seat()
 
@@ -29,15 +33,9 @@ class Nation:
             acquiring_district = self.districts[0]
             acquiring_district.representatives += 1
 
-    def calc_rep_distribution(self, method="modified"):
-        """
-        Calculates and fits the district representatives to the parties
-        for all the counties. calc_representatives must first have been run
-        :return:
-        """
-
+    def calc_party_representatives(self):
         for district in self.districts:
-            district.calc_representatives(method=method)
+            district.calc_representatives()
 
     def represented_parties(self):
         reps_parties = []
@@ -49,14 +47,14 @@ class Nation:
 
         return reps_parties
 
-    def district_quotient(self):
+    def get_district_quotient(self) -> pd.DataFrame:
         data = [
             {"name": district.name, "quotient": district.quotient} for district in self.districts
         ]
         df = pd.DataFrame(data)
         return df.set_index("name")
 
-    def district_representatives(self):
+    def get_district_representatives(self) -> pd.DataFrame:
         self.districts.sort(key=lambda x: x.name)
         data = [
             {"name": district.name, "representatives": district.representatives}
@@ -64,6 +62,16 @@ class Nation:
         ]
         df = pd.DataFrame(data)
         return df.set_index("name")
+
+    def get_party_representative(self) -> pd.DataFrame:
+        data_results = []
+        for district in self.districts:
+            data_results.append(district.get_representatives_per_party())
+        df = pd.concat(data_results, axis=0)
+        df = df.pivot(columns="district").dropna(axis=0)
+        df.columns = df.columns.droplevel(0)
+        df = df[df.sum(axis=1) > 0]
+        return df
 
     def national_mandates_count(self):
         """
@@ -88,10 +96,3 @@ class Nation:
         df = pd.DataFrame(df_list)
         df = df.pivot(index="District", columns="Party", values="Representatives")
         return df
-
-    def make_dataframe(self):
-        """
-        makes dataframe for each party's mandates in every district
-        :return:
-        """
-        pass

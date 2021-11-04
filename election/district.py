@@ -4,44 +4,44 @@
 
 """
 import copy
+from typing import List
+
+import pandas as pd
 
 
-class District:
+class Party:
     parameters = {
-        "area_importance": 1.8,  # Used in Norway
         "divide_factor": 2,  # Laguës' method (divide_factor*rep + 1)
         "st_lagues_factor": 1.4,
     }
 
     @classmethod
-    def set_parameters(cls, new_parameters):
+    def set_parameters(cls, new_parameters: dict):
         """
 
         :param new_parameters:
-        :type new_parameters: dict
         """
         cls.parameters = {**cls.parameters, **new_parameters}
 
-    def __init__(self, area: float, population: int, name: str, method: str = "normal"):
+    def __init__(
+        self, name: str, votes: int, district: str, short_name: str = None, method: str = "modified"
+    ):
+        """
+        A political party
+        :param name: name of political party
+        :param votes: nr of votes
+        :param short_name: Abbreviation of party name
+        :param method: normal or modified St Lagües
         """
 
-        :param area: area of district in km2
-        :param population: nr of inhabitants in district
-        :param name: name of district
-        :param method: method to calculate division number
-
-        """
-        if (area < 0) or (population < 0):
-            raise ValueError("Area and population must be positive")
-
-        self._area = area
-        self._population = int(population)
         self.name = name
-        self._representatives = 0
+        self.district = district
+        self.short_name = short_name
+        self._votes = votes
         self._method = method
-        self._coefficient = self.calc_coefficient()
+        self._representatives = 0
+        self._coefficient = copy.copy(votes)
         self.quotient = self.calc_quotient()
-        self.parties = None
 
     @property
     def representatives(self):
@@ -61,6 +61,52 @@ class District:
         self._method = method
         self.quotient = self.calc_quotient()
 
+    def calc_quotient(self):
+        if (self.method == "modified") and (self.representatives == 0):
+            coeff = self._coefficient / self.parameters["st_lagues_factor"]
+        else:
+
+            coeff = self._coefficient / (
+                self.parameters["divide_factor"] * self.representatives + 1
+            )
+        return coeff
+
+
+class District(Party):
+    parameters = {
+        "area_importance": 1.8,  # Used in Norway
+        "divide_factor": 2,  # Laguës' method (divide_factor*rep + 1)
+        "st_lagues_factor": 1.4,
+    }
+
+    def __init__(
+        self,
+        area: float,
+        population: int,
+        name: str,
+        method: str = "normal",
+        parties: List[Party] = None,
+    ):
+        """
+
+        :param area: area of district in km2
+        :param population: nr of inhabitants in district
+        :param name: name of district
+        :param method: method to calculate division number
+
+        """
+        if (area < 0) or (population < 0):
+            raise ValueError("Area and population must be positive")
+
+        self._area = area
+        self._population = int(population)
+        self.name = name
+        self._representatives = 0
+        self._method = method
+        self._coefficient = self.calc_coefficient()
+        self.quotient = self.calc_quotient()
+        self.parties = parties
+
     def calc_coefficient(self):
         return self._area * self.parameters["area_importance"] + self._population
 
@@ -79,32 +125,21 @@ class District:
     def count_district_votes(self):
         return sum([p._votes for p in self.parties])
 
-    def calc_quotient(self):
-        if (self.method == "modified") and (self.representatives == 0):
-            coeff = self._coefficient / self.parameters["st_lagues_factor"]
-        else:
-
-            coeff = self._coefficient / (
-                self.parameters["divide_factor"] * self.representatives + 1
-            )
-        return coeff
-
     def add_leveling_seat(self):
+        """
+        Adds leveling seat to the county
+        """
         self.representatives += 1
 
-    def calc_representatives(self, method="modified"):
+    def calc_representatives(self):
         """
-        Calculates each party's representatives in that district
+        Calculates each party's representatives in the district
         """
-
-        if method == "modified":
-            for party in self.parties:
-                party.quotient = party.calc_quotient(method=method)
 
         for _ in range(self.representatives - 1):
             self.parties.sort(key=lambda x: x.quotient, reverse=True)
-            self.parties[0].representatives += 1
-            self.parties[0].quotient = self.parties[0].calc_quotient(method=method)
+            acquiring_party = self.parties[0]
+            acquiring_party.representatives += 1
 
     def parties_with_reps(self):
         """
@@ -114,44 +149,10 @@ class District:
 
         return [p.name for p in self.parties if p.representatives > 0]
 
-
-class Party:
-    parameters = {
-        "divide_factor": 2,  # Laguës' method (divide_factor*rep + 1)
-        "st_lagues_factor": 1.4,
-    }
-
-    @classmethod
-    def set_parameters(cls, new_parameters):
-        """
-
-        :param new_parameters:
-        :type new_parameters: dict
-        """
-        cls.parameters = {**cls.parameters, **new_parameters}
-
-    def __init__(self, name, votes):
-        """
-        A political party
-        :param name: name of political party
-        :type name: str
-        :param votes: nr of votes
-        :type votes: int
-        """
-
-        self._name = name
-        self._votes = votes
-        self.divide_nr = copy.copy(votes)
-        self.representatives = 0
-
-    def calc_div_nr(self, method="normal"):
-
-        if method == "normal":
-            return self._votes / (self.parameters["divide_factor"] * self.representatives + 1)
-
-        if method == "modified":
-            if self.representatives == 0:
-                return self._votes / self.parameters["st_lagues_factor"]
-
-            else:
-                return self._votes / (self.parameters["divide_factor"] * self.representatives + 1)
+    def get_representatives_per_party(self) -> pd.DataFrame:
+        data = [
+            {"party": p.name, "representatives": p.representatives, "district": p.district}
+            for p in self.parties
+        ]
+        df = pd.DataFrame(data)
+        return df.set_index("party")
