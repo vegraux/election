@@ -6,6 +6,7 @@
 
 from typing import List
 
+import numpy as np
 import pandas as pd
 
 from election.district import District
@@ -68,31 +69,8 @@ class Nation:
         for district in self.districts:
             data_results.append(district.get_representatives_per_party())
         df = pd.concat(data_results, axis=0)
-        df = df.pivot(columns="district").dropna(axis=0)
+        df = df.pivot(columns="district").replace({np.nan: 0})
         df.columns = df.columns.droplevel(0)
         df = df[df.sum(axis=1) > 0]
-        return df
-
-    def national_mandates_count(self):
-        """
-        Creates a dataframe with the results of the election
-        :return:
-        """
-        rep_parties = self.represented_parties()
-        df_list = []
-        index = []
-        for district in self.districts:
-            index.append(district.name)
-            for party in district.parties:
-                if party.name in rep_parties:
-                    df_list.append(
-                        {
-                            "Party": party.name,
-                            "District": district.name,
-                            "Representatives": party.representatives,
-                        }
-                    )
-
-        df = pd.DataFrame(df_list)
-        df = df.pivot(index="District", columns="Party", values="Representatives")
+        df = df.astype(int)
         return df
