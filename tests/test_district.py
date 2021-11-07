@@ -22,16 +22,16 @@ class TestDistrict:
     def test_correct_div_num_modified(self, district1):
         district1.method = "modified"
         assert (
-            district1.quotient == (100 + 100 * 1.8) / 1.4
+            district1.quotient == (1000 + 1000 * 1.8) / 1.4
         )  # divide with 1.4 with modified version
         district1.representatives = 3
-        assert district1.quotient == (100 + 100 * 1.8) / 7
+        assert district1.quotient == (1000 + 1000 * 1.8) / 7
 
     def test_correct_div_num_normal(self, district1):
         district1.method = "normal"
-        assert district1.quotient == 100 + 100 * 1.8
+        assert district1.quotient == 1000 + 1000 * 1.8
         district1.representatives = 5
-        assert district1.quotient == (100 + 100 * 1.8) / 11
+        assert district1.quotient == (1000 + 1000 * 1.8) / 11
 
     def test_county_name_area(self):
         with pytest.raises(ValueError):
@@ -49,25 +49,45 @@ class TestDistrict:
         assert c1.parameters["area_importance"] == 2
         assert c2.parameters["area_importance"] == 2
 
-    def test_add_parties(self):
+    def test_append_parties(self):
         c1 = District(name="Finnmark", area=123, population=3421)
-        p1 = Party(name="SV", votes=2354, district="Finnmark")
-        p2 = Party(name="FRP", votes=654, district="Finnmark")
+        p1 = Party(name="SV", votes=2354)
+        p2 = Party(name="FRP", votes=654)
 
         assert c1.parties is None
-        c1.add_parties([p1, p2])
+        c1.append_parties([p1, p2])
 
         assert len(c1.parties) == 2
 
     def test_county_votes(self):
         c1 = District(name="Finnmark", area=123, population=3421)
-        p1 = Party(name="Sosialistisk venstreparti", votes=200, district="Finnmark")
-        p2 = Party(name="FRP", votes=300, district="Finnmark")
+        p1 = Party(name="Sosialistisk venstreparti", votes=200)
+        p2 = Party(name="FRP", votes=300)
 
-        c1.add_parties([p1, p2])
+        c1.append_parties([p1, p2])
 
-        assert c1.count_district_votes() == 500
+        assert c1.district_votes == 500
 
 
 class TestParty:
-    pass
+    def test_add_parties_votes(self, parties_with_representatives):
+        """Checks that + operator works. Votes and representatives should be added together"""
+        party_a, party_b = parties_with_representatives
+        added_parties = party_a + party_b
+        assert added_parties._votes == 300
+        assert party_a._votes == 200
+        assert party_b._votes == 100
+
+    def test_add_parties_representatives(self, parties_with_representatives):
+        """Checks that + operator works. Votes and representatives should be added together"""
+        party_a, party_b = parties_with_representatives
+        added_parties = party_a + party_b
+        assert added_parties.representatives == 9  # 10 minus leveling seat
+        assert party_a.representatives == 6
+        assert party_b.representatives == 3
+
+    def test_add_parties_different_names(self, parties_with_representatives, capture):
+        party_b, party_a = parties_with_representatives
+        _ = party_a + party_b
+        msg = "Party names differ: 'Party A' and 'Party B'. Resulting party is named 'Party A'"
+        capture.check(("election.district", "WARNING", msg))

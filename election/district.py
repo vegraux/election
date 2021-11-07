@@ -4,9 +4,13 @@
 
 """
 import copy
-from typing import List
+import logging
+from typing import List, Optional
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
+logger.setLevel("DEBUG")
 
 
 class Party:
@@ -23,9 +27,7 @@ class Party:
         """
         cls.parameters = {**cls.parameters, **new_parameters}
 
-    def __init__(
-        self, name: str, votes: int, district: str, short_name: str = None, method: str = "modified"
-    ):
+    def __init__(self, name: str, votes: int, short_name: str = None, method: str = "modified"):
         """
         A political party
         :param name: name of political party
@@ -35,40 +37,59 @@ class Party:
         """
 
         self.name = name
-        self.district = district
+        self.district = None
         self.short_name = short_name
         self._votes = votes
-        self._method = method
+        self.method = method
         self._representatives = 0
-        self._coefficient = copy.copy(votes)
-        self.quotient = self.calc_quotient()
+
+    def __repr__(self):
+        return self.name
+
+    def __add__(self, other):
+        """
+        Used to add votes and representatives from the same Party in different districts
+        """
+        if self.name != other.name:
+            msg = (
+                f"Party names differ: '{self.name}' and '{other.name}'. "
+                f"Resulting party is named '{self.name}'"
+            )
+            logger.warning(msg)
+        p = copy.deepcopy(self)
+        p._votes = self._votes + other._votes
+        p.representatives = self.representatives + other.representatives
+        return p
 
     @property
     def representatives(self):
         return self._representatives
 
+    @property
+    def coefficient(self):
+        return self._votes
+
     @representatives.setter
     def representatives(self, a):
         self._representatives = a
-        self.quotient = self.calc_quotient()
 
     @property
-    def method(self):
-        return self._method
+    def quotient(self):
+        if (self.method == "modified") and (self.representatives == 0):
+            quotient = self.coefficient / self.parameters["st_lagues_factor"]
+        else:
 
-    @method.setter
-    def method(self, method: str):
-        self._method = method
-        self.quotient = self.calc_quotient()
+            quotient = self.coefficient / (
+                self.parameters["divide_factor"] * self.representatives + 1
+            )
+        return quotient
 
     def calc_quotient(self):
         if (self.method == "modified") and (self.representatives == 0):
-            coeff = self._coefficient / self.parameters["st_lagues_factor"]
+            coeff = self.coefficient / self.parameters["st_lagues_factor"]
         else:
 
-            coeff = self._coefficient / (
-                self.parameters["divide_factor"] * self.representatives + 1
-            )
+            coeff = self.coefficient / (self.parameters["divide_factor"] * self.representatives + 1)
         return coeff
 
 
@@ -79,14 +100,7 @@ class District(Party):
         "st_lagues_factor": 1.4,
     }
 
-    def __init__(
-        self,
-        area: float,
-        population: int,
-        name: str,
-        method: str = "normal",
-        parties: List[Party] = None,
-    ):
+    def __init__(self, area: float, population: int, name: str, method: str = "normal"):
         """
 
         :param area: area of district in km2
@@ -102,28 +116,37 @@ class District(Party):
         self._population = int(population)
         self.name = name
         self._representatives = 0
-        self._method = method
-        self._coefficient = self.calc_coefficient()
-        self.quotient = self.calc_quotient()
-        self.parties = parties
+        self.method = method
+        self.parties: Optional[List[Party]] = None
 
-    def calc_coefficient(self):
+    @property
+    def votes_per_representative(self) -> int:
+        """
+        District factor, number of valid votes per representative. Used when distributing
+        leveling seats
+        """
+        return int(self.district_votes / self.representatives)
+
+    @property
+    def coefficient(self):
         return self._area * self.parameters["area_importance"] + self._population
 
-    def add_parties(self, parties):
+    @property
+    def district_votes(self) -> int:
         """
+        Gives total number of votes in the district
+        """
+        return sum([p._votes for p in self.parties])
 
-        :param parties: list of Party objects
-        :type parties: List
+    def append_parties(self, parties: List[Party]):
+        """
+        Adds parties to a county
         """
         if self.parties is None:
             self.parties = []
-
         for party in parties:
-            self.parties.append(party)
-
-    def count_district_votes(self):
-        return sum([p._votes for p in self.parties])
+            party.district = self.name
+        self.parties.extend(parties)
 
     def add_leveling_seat(self):
         """
@@ -131,9 +154,9 @@ class District(Party):
         """
         self.representatives += 1
 
-    def calc_representatives(self):
+    def calc_ordinary_representatives(self):
         """
-        Calculates each party's representatives in the district
+        Calculates each party's representatives in the district, excluding leveling seat.
         """
 
         for _ in range(self.representatives - 1):
