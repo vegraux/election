@@ -1,8 +1,63 @@
+import pathlib
+
+import numpy as np
+import pandas as pd
 import pytest
 from testfixtures import LogCapture
 
 from election.district import District, Party
 from election.voting import Nation
+
+
+@pytest.fixture
+def data_path():
+    dir = pathlib.Path(__file__).parent.parent / "election/data"
+    return dir
+
+
+@pytest.fixture
+def votes2021(data_path):
+    dir = data_path / "votes_2021.csv"
+    vote_data = pd.read_csv(dir, sep=";")
+    return vote_data
+
+
+@pytest.fixture
+def district_data(data_path):
+    dir = data_path / "area_population_2021.csv"
+    district_data = pd.read_csv(dir, sep=";")
+    return district_data
+
+
+@pytest.fixture
+def results2021_ordinary_representatives(votes2021):
+    votes2021["Ordinære mandater"] = (
+        votes2021["Antall mandater"] - votes2021["Antall utjevningsmandater"]
+    )
+    df = votes2021.pivot_table(index="Partikode", columns="Fylkenavn", values="Ordinære mandater")
+    df = df.replace({np.nan: 0})
+    df = df[df.sum(axis=1) > 0]
+    df = df.astype(int).transpose()
+    df = df.reindex(sorted(df.columns), axis=1)
+    df = df.reindex(sorted(df.index), axis=0)
+    return df
+
+
+@pytest.fixture
+def nation2021(votes2021, district_data):
+    districts = []
+    for k, row in district_data.iterrows():
+        district = row.iloc[0]
+        district_vote_data = votes2021[votes2021["Fylkenavn"] == district]
+        district_parties = []
+        for _, party in district_vote_data.iterrows():
+            p = Party(name=party.iloc[7], short_name=party.iloc[6], votes=party.iloc[12])
+            district_parties.append(p)
+        d = District(name=row.iloc[0], population=row.iloc[1], area=row.iloc[2])
+        d.append_parties(district_parties)
+        districts.append(d)
+    norway = Nation(districts=districts)
+    return norway
 
 
 @pytest.fixture

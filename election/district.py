@@ -174,7 +174,7 @@ class District(Party):
 
     def get_representatives_per_party(self) -> pd.DataFrame:
         data = [
-            {"party": p.name, "representatives": p.representatives, "district": p.district}
+            {"party": p.short_name, "representatives": p.representatives, "district": p.district}
             for p in self.parties
         ]
         df = pd.DataFrame(data)
