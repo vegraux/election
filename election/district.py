@@ -119,6 +119,15 @@ class District(Party):
         self.method = method
         self.parties: Optional[List[Party]] = None
 
+    def __add__(self, other):
+        """
+        Used to add votes and representatives from the same Party in different districts
+        """
+        p = copy.deepcopy(self)
+        p._area = self._area + other._area
+        p._population = self._population + other._population
+        return p
+
     @property
     def votes_per_representative(self) -> int:
         """

@@ -69,6 +69,20 @@ class TestDistrict:
 
         assert c1.district_votes == 500
 
+    def test_add_district_area(self, district1, district2):
+        """Checks that + operator works. Area and population should be added together"""
+        added_district = district1 + district2
+        assert added_district._area == 1100
+        assert district1._area == 1000
+        assert district2._area == 100
+
+    def test_add_district_population(self, district1, district2):
+        """Checks that + operator works. Area and population should be added together"""
+        added_district = district1 + district2
+        assert added_district._population == 1100
+        assert district1._population == 1000
+        assert district2._population == 100
+
 
 class TestParty:
     def test_add_parties_votes(self, parties_with_representatives):
