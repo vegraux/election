@@ -30,6 +30,17 @@ def district_data(data_path):
 
 
 @pytest.fixture
+def results2021_all_representatives(votes2021):
+    df = votes2021.pivot_table(index="Partikode", columns="Fylkenavn", values="Antall mandater")
+    df = df.replace({np.nan: 0})
+    df = df[df.sum(axis=1) > 0]
+    df = df.astype(int).transpose()
+    df = df.reindex(sorted(df.columns), axis=1)
+    df = df.reindex(sorted(df.index), axis=0)
+    return df
+
+
+@pytest.fixture
 def results2021_ordinary_representatives(votes2021):
     votes2021["Ordinære mandater"] = (
         votes2021["Antall mandater"] - votes2021["Antall utjevningsmandater"]
