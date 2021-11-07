@@ -2,11 +2,12 @@ import copy
 
 import pandas as pd
 
-from election.district import District, Party
-from election.voting import Nation
+from election.district import District
+from election.nation import Nation
+from election.party import Party
 
-district_data = pd.read_csv("data/area_population_2021.csv", sep=";")
-vote_data = pd.read_csv("data/votes_2021.csv", sep=";")
+district_data = pd.read_csv("../data/area_population_2021.csv", sep=";")
+vote_data = pd.read_csv("../data/votes_2021.csv", sep=";")
 st_lagues = 1.4
 
 districts = []

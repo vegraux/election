@@ -9,7 +9,8 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from election.district import District, Party
+from election.district import District
+from election.party import Party
 
 
 class Nation:
@@ -86,8 +87,8 @@ class Nation:
         return df
 
     def calc_leveling_seat(self):
-        national_parties = self.calc_total_party_votes()
-        _ = District(name="Nation", area=1, population=1, parties=national_parties)
+        _ = self.calc_total_party_votes()
+        _ = District(name="Nation", area=1, population=1)
         pass
 
     def calc_total_party_votes(self) -> List[Party]:

@@ -5,8 +5,9 @@ import pandas as pd
 import pytest
 from testfixtures import LogCapture
 
-from election.district import District, Party
-from election.voting import Nation
+from election.district import District
+from election.nation import Nation
+from election.party import Party
 
 
 @pytest.fixture
