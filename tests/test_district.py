@@ -48,6 +48,7 @@ class TestDistrict:
         District.set_parameters({"area_importance": 2})
         assert c1.parameters["area_importance"] == 2
         assert c2.parameters["area_importance"] == 2
+        District.set_parameters({"area_importance": 1.8})
 
     def test_append_parties(self):
         c1 = District(name="Finnmark", area=123, population=3421)
