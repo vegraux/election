@@ -4,24 +4,25 @@
 
 """
 import copy
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
 
 from election.district import District
-from election.party import Party
 
 
 class Nation:
     def __init__(
-        self, districts: List[District] = None, cutoff: float = 4, method: str = "modified"
+        self, districts: List[District] = None, cutoff: float = 0.04, method: str = "modified"
     ):
         self.cutoff = cutoff
         self.districts = districts if districts is not None else []
         self.method = method
         self.district_representatives = None
         self.party_representatives = None
+        self.national_district: Optional[District] = None
+        self.leveling_seat_parties: Optional[District] = None
 
     def calc_district_representatives(self, tot_rep: int = 150):
         """
@@ -86,22 +87,40 @@ class Nation:
         df = df.reindex(sorted(df.index), axis=0)
         return df
 
-    def calc_leveling_seat(self):
-        _ = self.calc_total_party_votes()
-        _ = District(name="Nation", area=1, population=1)
-        pass
+    def set_parties_over_cutoff(self):
+        """
+        Creates a District instance with parties over the defined cutoff.
+        """
+        district = copy.deepcopy(self.national_district)
+        cutoff_parties = []
+        for party in district.parties:
+            if party.vote_percentage(district.district_votes) < self.cutoff:
+                cutoff_parties.append(party)
+                continue
+            party.reset_representatives()
+        for party in cutoff_parties:
+            district.parties.remove(party)
 
-    def calc_total_party_votes(self) -> List[Party]:
+        self.leveling_seat_parties = district
+
+    def calc_leveling_seat_per_party(self):
+        over_represented_party = True
+        while over_represented_party:
+            pass
+
+    def set_national_district(self):
         """
         Loops over all districts and sums the votes for each party
         """
+        national_district = District(name="Nation", area=1, population=1)
         national_parties = {}
-        for district in self.districts:
+        districts = copy.deepcopy(self.districts)
+        for district in districts:
             for party in district.parties:
                 if party.name not in national_parties:
-                    national_party = copy.deepcopy(party)
-                    national_party.district = "Nation"
-                    national_parties[party.name] = national_party
+                    party.district = "Nation"
+                    national_parties[party.name] = party
                 else:
-                    national_parties[party.name]._votes += party._votes
-        return list(national_parties.values())
+                    national_parties[party.name] += party
+        national_district.append_parties(list(national_parties.values()))
+        self.national_district = national_district

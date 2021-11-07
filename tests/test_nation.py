@@ -16,3 +16,16 @@ def test_results2021_district_representatives_count(results2021_all_representati
         district_representatives,
         check_names=False,
     )
+
+
+def test_set_national_district(nation2021):
+    nation2021.calc_ordinary_representatives()
+    nation2021.set_national_district()
+    pass
+
+
+def test_set_parties_over_cutoff(nation2021):
+    nation2021.calc_ordinary_representatives()
+    nation2021.set_national_district()
+    nation2021.set_parties_over_cutoff()
+    assert len(nation2021.leveling_seat_parties) == 7  # rip krf and mdg ++

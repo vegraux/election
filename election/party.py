@@ -76,6 +76,12 @@ class Party:
             )
         return quotient
 
+    def reset_representatives(self):
+        self.representatives = 0
+
+    def vote_percentage(self, total_votes: int) -> float:
+        return self._votes / total_votes
+
     def calc_quotient(self):
         if (self.method == "modified") and (self.representatives == 0):
             coeff = self.coefficient / self.parameters["st_lagues_factor"]

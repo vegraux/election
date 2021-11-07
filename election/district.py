@@ -46,6 +46,9 @@ class District(Party):
         p._population = self._population + other._population
         return p
 
+    def __len__(self):
+        return len(self.parties)
+
     @property
     def votes_per_representative(self) -> int:
         """

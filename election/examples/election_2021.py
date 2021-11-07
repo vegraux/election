@@ -27,4 +27,4 @@ Party.set_parameters({"st_lagues_factor": st_lagues})
 
 norway = Nation(districts=copy.deepcopy(districts))
 norway.calc_ordinary_representatives()
-norway.calc_leveling_seat()
+norway.set_leveling_seat()
