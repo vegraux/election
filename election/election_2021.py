@@ -7,11 +7,6 @@ from election.voting import Nation
 
 district_data = pd.read_csv("data/area_population_2021.csv", sep=";")
 vote_data = pd.read_csv("data/votes_2021.csv", sep=";")
-result2021 = pd.read_csv("data/representatives_2021.csv", sep=";")
-result2021.set_index("Fylke", inplace=True)
-result2021 = result2021.reindex(sorted(result2021.columns), axis=1)
-result2021 = result2021.reindex(sorted(result2021.index), axis=0)
-
 st_lagues = 1.4
 
 districts = []
