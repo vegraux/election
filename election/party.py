@@ -75,13 +75,10 @@ class Party:
         Quotient that is sorted among all parties when distributing representatives
         """
         if (self.method == "modified") and (self.representatives == 0):
-            quotient = self.coefficient / self.parameters["st_lagues_factor"]
+            dividend = self.parameters["st_lagues_factor"]
         else:
-
-            quotient = self.coefficient / (
-                self.parameters["divide_factor"] * self.representatives + 1
-            )
-        return quotient
+            dividend = self.parameters["divide_factor"] * self.representatives + 1
+        return self.coefficient / dividend
 
     def reset_representatives(self):
         """
@@ -94,3 +91,9 @@ class Party:
         Party's share of total votes
         """
         return self._votes / total_votes
+
+    def level_seat_factor(self, votes_per_representative: float) -> float:
+        """
+        Factor used to distribute leveling seat.
+        """
+        return self.quotient / votes_per_representative

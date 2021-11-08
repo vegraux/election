@@ -134,7 +134,53 @@ class Nation:
             for party in districts.find_parties(parties_to_remove):
                 districts.parties.remove(party)
                 districts.representatives -= real_representatives[party.short_name]
+        leveling_seat_per_party.name = "seats"
         return leveling_seat_per_party.convert_dtypes(np.int64)
+
+    def get_leveling_seats_factors(self):
+        leveling_seat_data = []
+        for district in self.districts:
+            for party in district.parties:
+                party.method = "normal"
+                factor = party.level_seat_factor(district.votes_per_representative)
+                data = {"party": party.short_name, "district": district.name, "factor": factor}
+                leveling_seat_data.append(data)
+        df = pd.DataFrame(leveling_seat_data)
+        return df.sort_values(by="factor", ascending=False)
+
+    def distribute_leveling_seats_to_parties(
+        self, leveling_seat_per_party: pd.Series, leveling_seats_factors: pd.DataFrame
+    ):
+        leveling_seat_per_party = pd.DataFrame(leveling_seat_per_party)
+        leveling_seat_per_party["acquired"] = 0
+        qualifying = leveling_seats_factors["party"].isin(leveling_seat_per_party.index)
+        factors = leveling_seats_factors[qualifying]
+        leveling_seat_data = []
+        for _ in range(len(self.districts)):
+            factors = factors.sort_values(by="factor", ascending=False)
+            acquiring_party = factors.iloc[0, :].to_dict()
+            acquiring_party["leveling seat"] = 1
+            leveling_seat_per_party.loc[acquiring_party["party"], "acquired"] += 1
+            leveling_seat_data.append(acquiring_party)
+            factors = self.filter_leveling_seat_table(
+                factors, leveling_seat_per_party, acquiring_party
+            )
+        df = pd.DataFrame(leveling_seat_data)
+        df = df.pivot_table(
+            index="district", columns="party", values="leveling seat", aggfunc="count"
+        )
+        df = df.replace({np.nan: 0}).astype(int)
+        return df
+
+    def filter_leveling_seat_table(
+        self, factors: pd.DataFrame, leveling_seat_per_party: pd.DataFrame, acquiring_party: dict
+    ) -> pd.DataFrame:
+        """
+        Filters out parties/districts that have received all its leveling seats
+        """
+        factors = factors[factors["district"] != acquiring_party["district"]]
+        rest = leveling_seat_per_party["seats"] - leveling_seat_per_party["acquired"]
+        return factors[factors["party"].isin(rest[rest > 0].index)]
 
     def get_total_rep_for_leveling_seat_calc(self) -> int:
         """

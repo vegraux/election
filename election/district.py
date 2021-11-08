@@ -56,9 +56,9 @@ class District(Party):
     def votes_per_representative(self) -> float:
         """
         District factor, number of votes per representative. Used when distributing
-        leveling seats
+        leveling seats. 1 is subtracted to the leveling seat in the district
         """
-        return self.district_votes / self.representatives
+        return self.district_votes / (self.representatives - 1)
 
     @property
     def coefficient(self) -> float:

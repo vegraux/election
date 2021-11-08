@@ -44,3 +44,15 @@ def test_calc_leveling_seat_per_party(nation2021, results2021_leveling_seats):
         check_names=False,
         check_dtype=False,
     )
+
+
+def test_get_leveling_seats_factors(nation2021, results2021_leveling_seats):
+    nation2021.calc_ordinary_representatives()
+    nation2021.set_national_district()
+    nation2021.set_threshold_parties()
+    leveling_seats_factors = nation2021.get_leveling_seats_factors()
+    leveling_seat_per_party = nation2021.calc_leveling_seat_per_party()
+    seats = nation2021.distribute_leveling_seats_to_parties(
+        leveling_seat_per_party, leveling_seats_factors
+    )
+    pd.testing.assert_frame_equal(results2021_leveling_seats, seats, check_names=False)
