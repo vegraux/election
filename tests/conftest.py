@@ -11,27 +11,35 @@ from election.party import Party
 
 
 @pytest.fixture
-def data_path():
-    dir = pathlib.Path(__file__).parent.parent / "election/data"
-    return dir
+def data_path() -> pathlib.Path:
+    return pathlib.Path(__file__).parent.parent / "election/data"
 
 
 @pytest.fixture
-def votes2021(data_path):
-    dir = data_path / "votes_2021.csv"
-    vote_data = pd.read_csv(dir, sep=";")
+def votes2021(data_path) -> pd.DataFrame:
+    """
+    Results from the 2021 election taken from valg.no
+    """
+    vote_data = pd.read_csv(data_path / "votes_2021.csv", sep=";")
     return vote_data
 
 
 @pytest.fixture
-def district_data(data_path):
-    dir = data_path / "area_population_2021.csv"
-    district_data = pd.read_csv(dir, sep=";")
+def district_data(data_path) -> pd.DataFrame:
+    """
+    DataFrame with with district area and population used in the 2021 election in Norway.
+    The data is from 1. january 2020. The district data used is updated every 8th year.
+    """
+    district_data = pd.read_csv(data_path / "area_population_2021.csv", sep=";")
     return district_data
 
 
 @pytest.fixture
-def results2021_all_representatives(votes2021):
+def results2021_all_representatives(votes2021) -> pd.DataFrame:
+    """
+    DataFrame with representatives for all districts and all parties that got
+    at least one representative
+    """
     df = votes2021.pivot_table(index="Partikode", columns="Fylkenavn", values="Antall mandater")
     df = df.replace({np.nan: 0})
     df = df[df.sum(axis=1) > 0]
@@ -42,7 +50,11 @@ def results2021_all_representatives(votes2021):
 
 
 @pytest.fixture
-def results2021_ordinary_representatives(votes2021):
+def results2021_ordinary_representatives(votes2021) -> pd.DataFrame:
+    """
+    DataFrame with representatives for each party in each district, excluding
+    leveling seats
+    """
     votes2021["Ordinære mandater"] = (
         votes2021["Antall mandater"] - votes2021["Antall utjevningsmandater"]
     )
@@ -56,7 +68,11 @@ def results2021_ordinary_representatives(votes2021):
 
 
 @pytest.fixture
-def results2021_leveling_seats(votes2021):
+def results2021_leveling_seats(votes2021) -> pd.DataFrame:
+    """
+    DataFrame with distribution of leveling seat for each district. Only parties
+    which gained at least one leveling seat are included
+    """
     df = votes2021[votes2021["Antall utjevningsmandater"] > 0]
     df = df.pivot_table(index="Partikode", columns="Fylkenavn", values="Antall utjevningsmandater")
     df = df.replace({np.nan: 0})
@@ -68,7 +84,10 @@ def results2021_leveling_seats(votes2021):
 
 
 @pytest.fixture
-def nation2021(votes2021, district_data):
+def nation2021(votes2021, district_data) -> Nation:
+    """
+    Creates a Nation instance with data from the 2021 election in Norway
+    """
     districts = []
     for k, row in district_data.iterrows():
         district = row.iloc[0]

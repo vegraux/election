@@ -39,30 +39,40 @@ class District(Party):
 
     def __add__(self, other):
         """
-        Used to add votes and representatives from the same Party in different districts
+        Used to add area and population from different districts
         """
-        p = copy.deepcopy(self)
-        p._area = self._area + other._area
-        p._population = self._population + other._population
-        return p
+        district = copy.deepcopy(self)
+        district._area = self._area + other._area
+        district._population = self._population + other._population
+        return district
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """
+        Defined to be number of parties in the district
+        """
         return len(self.parties)
 
     @property
-    def votes_per_representative(self) -> int:
+    def votes_per_representative(self) -> float:
         """
-        District factor, number of valid votes per representative. Used when distributing
+        District factor, number of votes per representative. Used when distributing
         leveling seats
         """
-        return int(self.district_votes / self.representatives)
+        return self.district_votes / self.representatives
 
     @property
-    def coefficient(self):
+    def coefficient(self) -> float:
+        """
+        Coefficient (dividend) used to distribute district representatives
+        """
         return self._area * self.parameters["area_importance"] + self._population
 
     @property
     def rep_per_party(self) -> pd.Series:
+        """
+        Convenience that gives pd.Series instead of pd.DataFrame as
+        self.get_representatives_per_party() does
+        """
         return self.get_representatives_per_party()["representatives"]
 
     @property
@@ -76,11 +86,14 @@ class District(Party):
     def distributed_representatives(self) -> int:
         """
         Gives total number of distributed representatives in the district. Can differ from
-        self.representatives (feature not bug, I think)
+        self.representatives (feature not bug, imo)
         """
         return sum([p.representatives for p in self.parties])
 
     def reset_party_representatives(self):
+        """
+        Sets distributed representatives to 0 for all parties
+        """
         for party in self.parties:
             party.reset_representatives()
 
@@ -94,7 +107,10 @@ class District(Party):
             party.district = self.name
         self.parties.extend(parties)
 
-    def find_parties(self, party_names: List[str]):
+    def find_parties(self, party_names: List[str]) -> List[Party]:
+        """
+        Finds party instances for the given list of short names for parties
+        """
         return [p for p in self.parties if p.short_name in party_names]
 
     def add_leveling_seat(self):
@@ -120,15 +136,11 @@ class District(Party):
             acquiring_party = parties[0]
             acquiring_party.representatives += 1
 
-    def parties_with_reps(self):
-        """
-        gives name of parties with representatives
-        :return: list of parties (strings)
-        """
-
-        return [p.name for p in self.parties if p.representatives > 0]
-
     def get_representatives_per_party(self) -> pd.DataFrame:
+        """
+        Gives DataFrame with data for short name, number of representatives
+        and district for all parties
+        """
         data = [
             {"party": p.short_name, "representatives": p.representatives, "district": p.district}
             for p in self.parties

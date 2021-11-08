@@ -48,17 +48,21 @@ class Party:
                 f"Resulting party is named '{self.name}'"
             )
             logger.warning(msg)
-        p = copy.deepcopy(self)
-        p._votes = self._votes + other._votes
-        p.representatives = self.representatives + other.representatives
-        return p
+        party = copy.deepcopy(self)
+        party._votes = self._votes + other._votes
+        party.representatives = self.representatives + other.representatives
+        return party
 
     @property
-    def representatives(self):
+    def representatives(self) -> int:
         return self._representatives
 
     @property
-    def coefficient(self):
+    def coefficient(self) -> int:
+        """
+        Coefficient (dividend) used to distribute party representatives. The same as the number
+        of votes
+        """
         return self._votes
 
     @representatives.setter
@@ -66,7 +70,10 @@ class Party:
         self._representatives = a
 
     @property
-    def quotient(self):
+    def quotient(self) -> float:
+        """
+        Quotient that is sorted among all parties when distributing representatives
+        """
         if (self.method == "modified") and (self.representatives == 0):
             quotient = self.coefficient / self.parameters["st_lagues_factor"]
         else:
@@ -77,15 +84,13 @@ class Party:
         return quotient
 
     def reset_representatives(self):
+        """
+        Resets the distributed representatives to 0. Used when calculating leveling seats
+        """
         self.representatives = 0
 
-    def vote_percentage(self, total_votes: int) -> float:
+    def vote_share(self, total_votes: int) -> float:
+        """
+        Party's share of total votes
+        """
         return self._votes / total_votes
-
-    def calc_quotient(self):
-        if (self.method == "modified") and (self.representatives == 0):
-            coeff = self.coefficient / self.parameters["st_lagues_factor"]
-        else:
-
-            coeff = self.coefficient / (self.parameters["divide_factor"] * self.representatives + 1)
-        return coeff
