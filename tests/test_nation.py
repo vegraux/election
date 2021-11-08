@@ -28,4 +28,12 @@ def test_set_parties_over_cutoff(nation2021):
     nation2021.calc_ordinary_representatives()
     nation2021.set_national_district()
     nation2021.set_parties_over_cutoff()
-    assert len(nation2021.leveling_seat_parties) == 7  # rip krf and mdg ++
+    assert len(nation2021.over_cutoff_district) == 7  # rip krf and mdg ++
+
+
+def test_calc_leveling_seat_per_party(nation2021, results2021_leveling_representatives):
+    nation2021.calc_ordinary_representatives()
+    nation2021.set_national_district()
+    nation2021.set_parties_over_cutoff()
+    _ = nation2021.calc_leveling_seat_per_party()
+    pass

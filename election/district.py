@@ -18,7 +18,7 @@ class District(Party):
         "st_lagues_factor": 1.4,
     }
 
-    def __init__(self, area: float, population: int, name: str, method: str = "normal"):
+    def __init__(self, area: float, population: int, name: str, method: str = "modified"):
         """
 
         :param area: area of district in km2
@@ -68,6 +68,10 @@ class District(Party):
         """
         return sum([p._votes for p in self.parties])
 
+    def reset_party_representatives(self):
+        for party in self.parties:
+            party.reset_representatives()
+
     def append_parties(self, parties: List[Party]):
         """
         Adds parties to a county
@@ -77,6 +81,9 @@ class District(Party):
         for party in parties:
             party.district = self.name
         self.parties.extend(parties)
+
+    def find_parties(self, party_names: List[str]):
+        return [p for p in self.parties if p.short_name in party_names]
 
     def add_leveling_seat(self):
         """
@@ -88,10 +95,17 @@ class District(Party):
         """
         Calculates each party's representatives in the district, excluding leveling seat.
         """
+        self.distribute_party_representatives(self.parties, self.representatives - 1)
 
-        for _ in range(self.representatives - 1):
-            self.parties.sort(key=lambda x: x.quotient, reverse=True)
-            acquiring_party = self.parties[0]
+    @staticmethod
+    def distribute_party_representatives(parties: List[Party], num_rep: int):
+        """
+        Iterates over a list of Party and distributes num_rep representatives.
+        """
+
+        for _ in range(num_rep):
+            parties.sort(key=lambda x: x.quotient, reverse=True)
+            acquiring_party = parties[0]
             acquiring_party.representatives += 1
 
     def parties_with_reps(self):

@@ -14,17 +14,23 @@ from election.district import District
 
 class Nation:
     def __init__(
-        self, districts: List[District] = None, cutoff: float = 0.04, method: str = "modified"
+        self,
+        districts: List[District] = None,
+        cutoff: float = 0.04,
+        method: str = "modified",
+        tot_rep: int = 150,
     ):
         self.cutoff = cutoff
+        self.tot_rep = tot_rep
         self.districts = districts if districts is not None else []
         self.method = method
         self.district_representatives = None
         self.party_representatives = None
         self.national_district: Optional[District] = None
-        self.leveling_seat_parties: Optional[District] = None
+        self.over_cutoff_district: Optional[District] = None
+        self.under_cutoff_district: Optional[District] = None
 
-    def calc_district_representatives(self, tot_rep: int = 150):
+    def calc_district_representatives(self):
         """
         Distribute total national representatives to the districts
         :param tot_rep: Total number of ordinary representatives
@@ -33,7 +39,7 @@ class Nation:
         for district in self.districts:
             district.add_leveling_seat()
 
-        for _ in range(tot_rep):
+        for _ in range(self.tot_rep):
             self.districts.sort(key=lambda x: x.quotient, reverse=True)
             acquiring_district = self.districts[0]
             acquiring_district.representatives += 1
@@ -44,19 +50,9 @@ class Nation:
             district.calc_ordinary_representatives()
         self.party_representatives = self.get_party_representative()
 
-    def calc_ordinary_representatives(self, tot_rep: int = 150):
-        self.calc_district_representatives(tot_rep=tot_rep)
+    def calc_ordinary_representatives(self):
+        self.calc_district_representatives()
         self.calc_party_representatives()
-
-    def represented_parties(self):
-        reps_parties = []
-        for district in self.districts:
-            district_parties = district.parties_with_reps()
-            for p in district_parties:
-                if p not in reps_parties:
-                    reps_parties.append(p)
-
-        return reps_parties
 
     def get_district_quotient(self) -> pd.DataFrame:
         data = [
@@ -97,16 +93,44 @@ class Nation:
             if party.vote_percentage(district.district_votes) < self.cutoff:
                 cutoff_parties.append(party)
                 continue
-            party.reset_representatives()
         for party in cutoff_parties:
             district.parties.remove(party)
-
-        self.leveling_seat_parties = district
+        under_cutoff_district = District(1, 1, name="Under cutoff")
+        under_cutoff_district.append_parties(cutoff_parties)
+        self.over_cutoff_district = district
+        self.under_cutoff_district = under_cutoff_district
 
     def calc_leveling_seat_per_party(self):
         over_represented_party = True
+        districts = copy.deepcopy(self.over_cutoff_district)
+        real_representatives = self.get_party_representative().sum()
+        districts.representatives = self.get_total_rep_for_leveling_seat_calc()
         while over_represented_party:
-            pass
+            districts.reset_party_representatives()
+            districts.distribute_party_representatives(districts.parties, districts.representatives)
+            diff = (
+                real_representatives - districts.get_representatives_per_party()["representatives"]
+            )
+            parties_to_remove = diff[diff > 0]
+            if len(parties_to_remove) == 0:
+                over_represented_party = False
+            for party in districts.find_parties(parties_to_remove):
+                districts.parties.remove(party)
+                districts.representatives -= real_representatives[party.short_name]
+
+        return districts
+
+    def get_total_rep_for_leveling_seat_calc(self):
+        """
+        Representatives from parties that don't qualify for a leveling seat due to a vote share
+        under the cut-off, should be removed before distributing the representatives when the
+        nation as a whole is regarded as a district
+        """
+        tot_rep = self.tot_rep + len(self.districts)
+        remove_rep = self.under_cutoff_district.get_representatives_per_party()[
+            "representatives"
+        ].sum()
+        return tot_rep - remove_rep
 
     def set_national_district(self):
         """

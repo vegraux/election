@@ -56,6 +56,18 @@ def results2021_ordinary_representatives(votes2021):
 
 
 @pytest.fixture
+def results2021_leveling_representatives(votes2021):
+    df = votes2021[votes2021["Antall utjevningsmandater"] > 0]
+    df = df.pivot_table(index="Partikode", columns="Fylkenavn", values="Antall utjevningsmandater")
+    df = df.replace({np.nan: 0})
+    df = df[df.sum(axis=1) > 0]
+    df = df.astype(int).transpose()
+    df = df.reindex(sorted(df.columns), axis=1)
+    df = df.reindex(sorted(df.index), axis=0)
+    return df
+
+
+@pytest.fixture
 def nation2021(votes2021, district_data):
     districts = []
     for k, row in district_data.iterrows():
