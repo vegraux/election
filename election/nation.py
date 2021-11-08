@@ -101,24 +101,20 @@ class Nation:
         self.under_cutoff_district = under_cutoff_district
 
     def calc_leveling_seat_per_party(self):
-        over_represented_party = True
         districts = copy.deepcopy(self.over_cutoff_district)
         real_representatives = self.get_party_representative().sum()
         districts.representatives = self.get_total_rep_for_leveling_seat_calc()
-        while over_represented_party:
+        while True:
             districts.reset_party_representatives()
             districts.distribute_party_representatives(districts.parties, districts.representatives)
-            diff = (
-                real_representatives - districts.get_representatives_per_party()["representatives"]
-            )
-            parties_to_remove = diff[diff > 0]
+            leveling_seat_per_party = (districts.rep_per_party - real_representatives).dropna()
+            parties_to_remove = leveling_seat_per_party[leveling_seat_per_party < 0]
             if len(parties_to_remove) == 0:
-                over_represented_party = False
+                break
             for party in districts.find_parties(parties_to_remove):
                 districts.parties.remove(party)
                 districts.representatives -= real_representatives[party.short_name]
-
-        return districts
+        return leveling_seat_per_party.convert_dtypes(np.int64)
 
     def get_total_rep_for_leveling_seat_calc(self):
         """
@@ -127,9 +123,7 @@ class Nation:
         nation as a whole is regarded as a district
         """
         tot_rep = self.tot_rep + len(self.districts)
-        remove_rep = self.under_cutoff_district.get_representatives_per_party()[
-            "representatives"
-        ].sum()
+        remove_rep = self.under_cutoff_district.rep_per_party.sum()
         return tot_rep - remove_rep
 
     def set_national_district(self):

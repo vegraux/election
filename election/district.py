@@ -62,6 +62,10 @@ class District(Party):
         return self._area * self.parameters["area_importance"] + self._population
 
     @property
+    def rep_per_party(self) -> pd.Series:
+        return self.get_representatives_per_party()["representatives"]
+
+    @property
     def district_votes(self) -> int:
         """
         Gives total number of votes in the district

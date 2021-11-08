@@ -31,9 +31,14 @@ def test_set_parties_over_cutoff(nation2021):
     assert len(nation2021.over_cutoff_district) == 7  # rip krf and mdg ++
 
 
-def test_calc_leveling_seat_per_party(nation2021, results2021_leveling_representatives):
+def test_calc_leveling_seat_per_party(nation2021, results2021_leveling_seats):
     nation2021.calc_ordinary_representatives()
     nation2021.set_national_district()
     nation2021.set_parties_over_cutoff()
-    _ = nation2021.calc_leveling_seat_per_party()
-    pass
+    leveling_seat_per_party = nation2021.calc_leveling_seat_per_party()
+    pd.testing.assert_series_equal(
+        leveling_seat_per_party,
+        results2021_leveling_seats.sum(),
+        check_names=False,
+        check_dtype=False,
+    )

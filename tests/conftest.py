@@ -56,7 +56,7 @@ def results2021_ordinary_representatives(votes2021):
 
 
 @pytest.fixture
-def results2021_leveling_representatives(votes2021):
+def results2021_leveling_seats(votes2021):
     df = votes2021[votes2021["Antall utjevningsmandater"] > 0]
     df = df.pivot_table(index="Partikode", columns="Fylkenavn", values="Antall utjevningsmandater")
     df = df.replace({np.nan: 0})
