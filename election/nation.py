@@ -83,16 +83,16 @@ class Nation:
         df = df.reindex(sorted(df.index), axis=0)
         return df
 
-    def set_parties_over_cutoff(self):
+    def set_cutoff_parties(self):
         """
-        Creates a District instance with parties over the defined cutoff.
+        Sets District instances for parties over and under the defined cutoff.
         """
         district = copy.deepcopy(self.national_district)
         cutoff_parties = []
         for party in district.parties:
             if party.vote_percentage(district.district_votes) < self.cutoff:
                 cutoff_parties.append(party)
-                continue
+
         for party in cutoff_parties:
             district.parties.remove(party)
         under_cutoff_district = District(1, 1, name="Under cutoff")

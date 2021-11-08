@@ -72,6 +72,14 @@ class District(Party):
         """
         return sum([p._votes for p in self.parties])
 
+    @property
+    def distributed_representatives(self) -> int:
+        """
+        Gives total number of distributed representatives in the district. Can differ from
+        self.representatives (feature not bug, I think)
+        """
+        return sum([p.representatives for p in self.parties])
+
     def reset_party_representatives(self):
         for party in self.parties:
             party.reset_representatives()
