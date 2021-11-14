@@ -147,3 +147,23 @@ class District(Party):
         ]
         df = pd.DataFrame(data)
         return df.set_index("party")
+
+
+class NationDistrict(District):
+    def __init__(self, districts: List[District]):
+        super().__init__(area=1, population=1, name="Nation")
+        self.parties = self.set_national_district(districts)
+
+    def set_national_district(self, districts: List[District]) -> List[Party]:
+        """
+        Loops over all districts and sums the votes for each party
+        """
+        national_parties = {}
+        districts = copy.deepcopy(districts)
+        for district in districts:
+            for party in district.parties:
+                if party.name not in national_parties:
+                    national_parties[party.name] = party
+                else:
+                    national_parties[party.name] += party
+        return list(national_parties.values())
