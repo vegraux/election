@@ -53,8 +53,10 @@ def test_distribute_leveling_seats_to_parties(nation2021, results2021_leveling_s
     nation2021.set_threshold_parties()
     nation2021.set_leveling_seats_factors()
     nation2021.set_leveling_seat_per_party()
-    seats = nation2021.distribute_leveling_seats_to_parties()
-    pd.testing.assert_frame_equal(results2021_leveling_seats, seats, check_names=False)
+    nation2021.distribute_leveling_seats_to_parties()
+    pd.testing.assert_frame_equal(
+        results2021_leveling_seats, nation2021.leveling_seats, check_names=False
+    )
 
 
 def test_apply_leveling_seat_results(nation2021, results2021_leveling_seats):
@@ -63,8 +65,8 @@ def test_apply_leveling_seat_results(nation2021, results2021_leveling_seats):
     nation2021.set_threshold_parties()
     nation2021.set_leveling_seats_factors()
     nation2021.set_leveling_seat_per_party()
-    seats = nation2021.distribute_leveling_seats_to_parties()
-    nation2021.apply_leveling_seat_results(seats)
+    nation2021.distribute_leveling_seats_to_parties()
+    nation2021.apply_leveling_seat_results()
     diff = nation2021.party_representatives - nation2021.ordinary_party_representatives
     diff = diff.loc[:, ~(diff == 0).all(axis=0)]  # The diff should be the leveling seats
     pd.testing.assert_frame_equal(results2021_leveling_seats, diff, check_names=False)

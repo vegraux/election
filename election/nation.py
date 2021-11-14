@@ -31,6 +31,7 @@ class Nation:
         self.under_threshold_district: Optional[District] = None
         self.leveling_seats_factors: Optional[pd.DataFrame] = None
         self.leveling_seat_per_party: Optional[pd.Series] = None
+        self.leveling_seats: Optional[pd.DataFrame] = None
 
     def calc_district_representatives(self):
         """
@@ -171,7 +172,7 @@ class Nation:
             index="district", columns="party", values="leveling seat", aggfunc="count"
         )
         df = df.replace({np.nan: 0}).astype(int)
-        return df
+        self.leveling_seats = df
 
     def filter_leveling_seat_table(
         self, factors: pd.DataFrame, leveling_seat_per_party: pd.DataFrame, acquiring_party: dict
@@ -209,13 +210,13 @@ class Nation:
         national_district.append_parties(list(national_parties.values()))
         self.national_district = national_district
 
-    def apply_leveling_seat_results(self, leveling_seat: pd.DataFrame):
+    def apply_leveling_seat_results(self):
         """
         Adds the leveling seats to the relevant Party instances as given by
         the DataFrame leveling_seat
         """
         for district in self.districts:
-            acquiring_party_name = leveling_seat.loc[district.name, :].idxmax()
+            acquiring_party_name = self.leveling_seats.loc[district.name, :].idxmax()
             acquiring_party = district.find_parties(acquiring_party_name)[0]
             acquiring_party.representatives += 1
 
@@ -223,9 +224,7 @@ class Nation:
         self.calc_ordinary_representatives()
         self.set_national_district()
         self.set_threshold_parties()
-        leveling_seats_factors = self.set_leveling_seats_factors()
-        leveling_seat_per_party = self.set_leveling_seat_per_party()
-        seats = self.distribute_leveling_seats_to_parties(
-            leveling_seat_per_party, leveling_seats_factors
-        )
-        self.apply_leveling_seat_results(seats)
+        self.set_leveling_seats_factors()
+        self.set_leveling_seat_per_party()
+        self.distribute_leveling_seats_to_parties()
+        self.apply_leveling_seat_results()
