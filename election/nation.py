@@ -25,7 +25,7 @@ class Nation:
         self.districts = districts if districts is not None else []
         self.method = method
         self.district_representatives: Optional[pd.DataFrame] = None
-        self.party_representatives: Optional[pd.DataFrame] = None
+        self.ordinary_party_representatives: Optional[pd.DataFrame] = None
         self.national_district: Optional[District] = None
         self.over_threshold_district: Optional[District] = None
         self.under_threshold_district: Optional[District] = None
@@ -50,7 +50,7 @@ class Nation:
         """
         for district in self.districts:
             district.calc_ordinary_representatives()
-        self.party_representatives = self.get_party_representative()
+        self.ordinary_party_representatives = self.party_representatives
 
     def calc_ordinary_representatives(self):
         """
@@ -82,7 +82,8 @@ class Nation:
         df = pd.DataFrame(data)
         return df.set_index("name")
 
-    def get_party_representative(self) -> pd.DataFrame:
+    @property
+    def party_representatives(self) -> pd.DataFrame:
         """
         DataFrame with number of representatives for each county and party. Only
         parties with representatives are included
@@ -122,7 +123,7 @@ class Nation:
         the data as a pd.Series. The corresponding districts are not calculated here
         """
         districts = copy.deepcopy(self.over_threshold_district)
-        real_representatives = self.get_party_representative().sum()
+        real_representatives = self.party_representatives.sum()
         districts.representatives = self.get_total_rep_for_leveling_seat_calc()
         while True:
             districts.reset_party_representatives()
@@ -207,3 +208,13 @@ class Nation:
                     national_parties[party.name] += party
         national_district.append_parties(list(national_parties.values()))
         self.national_district = national_district
+
+    def apply_leveling_seat_results(self, leveling_seat: pd.DataFrame):
+        """
+        Adds the leveling seats to the relevant Party instances as given by
+        the DataFrame leveling_seat
+        """
+        for district in self.districts:
+            acquiring_party_name = leveling_seat.loc[district.name, :].idxmax()
+            acquiring_party = district.find_parties(acquiring_party_name)[0]
+            acquiring_party.representatives += 1
