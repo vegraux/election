@@ -29,6 +29,8 @@ class Nation:
         self.national_district: Optional[District] = None
         self.over_threshold_district: Optional[District] = None
         self.under_threshold_district: Optional[District] = None
+        self.leveling_seats_factors: Optional[pd.DataFrame] = None
+        self.leveling_seat_per_party: Optional[pd.Series] = None
 
     def calc_district_representatives(self):
         """
@@ -117,7 +119,7 @@ class Nation:
         self.over_threshold_district = over_threshold_district
         self.under_threshold_district = under_threshold_district
 
-    def calc_leveling_seat_per_party(self) -> pd.Series:
+    def set_leveling_seat_per_party(self):
         """
         Calculates the number of leveling seats a party should have, and returns
         the data as a pd.Series. The corresponding districts are not calculated here
@@ -136,9 +138,9 @@ class Nation:
                 districts.parties.remove(party)
                 districts.representatives -= real_representatives[party.short_name]
         leveling_seat_per_party.name = "seats"
-        return leveling_seat_per_party.convert_dtypes(np.int64)
+        self.leveling_seat_per_party = leveling_seat_per_party.convert_dtypes(np.int64)
 
-    def get_leveling_seats_factors(self):
+    def set_leveling_seats_factors(self):
         leveling_seat_data = []
         for district in self.districts:
             for party in district.parties:
@@ -147,15 +149,13 @@ class Nation:
                 data = {"party": party.short_name, "district": district.name, "factor": factor}
                 leveling_seat_data.append(data)
         df = pd.DataFrame(leveling_seat_data)
-        return df.sort_values(by="factor", ascending=False)
+        self.leveling_seats_factors = df.sort_values(by="factor", ascending=False)
 
-    def distribute_leveling_seats_to_parties(
-        self, leveling_seat_per_party: pd.Series, leveling_seats_factors: pd.DataFrame
-    ):
-        leveling_seat_per_party = pd.DataFrame(leveling_seat_per_party)
+    def distribute_leveling_seats_to_parties(self):
+        leveling_seat_per_party = pd.DataFrame(self.leveling_seat_per_party)
         leveling_seat_per_party["acquired"] = 0
-        qualifying = leveling_seats_factors["party"].isin(leveling_seat_per_party.index)
-        factors = leveling_seats_factors[qualifying]
+        qualifying = self.leveling_seats_factors["party"].isin(leveling_seat_per_party.index)
+        factors = self.leveling_seats_factors[qualifying]
         leveling_seat_data = []
         for _ in range(len(self.districts)):
             factors = factors.sort_values(by="factor", ascending=False)
@@ -218,3 +218,14 @@ class Nation:
             acquiring_party_name = leveling_seat.loc[district.name, :].idxmax()
             acquiring_party = district.find_parties(acquiring_party_name)[0]
             acquiring_party.representatives += 1
+
+    def simulate_election(self):
+        self.calc_ordinary_representatives()
+        self.set_national_district()
+        self.set_threshold_parties()
+        leveling_seats_factors = self.set_leveling_seats_factors()
+        leveling_seat_per_party = self.set_leveling_seat_per_party()
+        seats = self.distribute_leveling_seats_to_parties(
+            leveling_seat_per_party, leveling_seats_factors
+        )
+        self.apply_leveling_seat_results(seats)
