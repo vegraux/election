@@ -38,6 +38,7 @@ class Nation:
         Distribute total national representatives to the districts.
         """
         for district in self.districts:
+            district.reset_representatives()
             district.add_leveling_seat()
 
         for _ in range(self.tot_rep):
