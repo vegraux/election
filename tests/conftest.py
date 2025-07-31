@@ -12,7 +12,7 @@ from election.party import Party
 
 @pytest.fixture
 def data_path() -> pathlib.Path:
-    return pathlib.Path(__file__).parent.parent / "election/data"
+    return pathlib.Path(__file__).parent.parent / "src/election/data"
 
 
 @pytest.fixture
