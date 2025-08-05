@@ -40,8 +40,8 @@ def test_set_leveling_seat_per_party(nation2021, results2021_leveling_seats):
     nation2021.set_threshold_parties()
     nation2021.set_leveling_seat_per_party()
     pd.testing.assert_series_equal(
-        nation2021.leveling_seat_per_party,
-        results2021_leveling_seats.sum(),
+        nation2021.leveling_seat_per_party.sort_index(),
+        results2021_leveling_seats.sum().sort_index(),
         check_names=False,
         check_dtype=False,
     )

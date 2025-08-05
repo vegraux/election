@@ -132,13 +132,15 @@ class Nation:
         while True:
             districts.reset_party_representatives()
             districts.distribute_party_representatives(districts.parties, districts.representatives)
-            leveling_seat_per_party = (districts.rep_per_party - real_representatives).dropna()
+            rep = districts.rep_per_party
+            leveling_seat_per_party = rep.sub(real_representatives, fill_value=0).loc[rep.index]
             parties_to_remove = leveling_seat_per_party[leveling_seat_per_party < 0]
             if len(parties_to_remove) == 0:
                 break
             for party in districts.find_parties(parties_to_remove):
                 districts.parties.remove(party)
-                districts.representatives -= real_representatives[party.short_name]
+                if party.short_name in real_representatives:
+                    districts.representatives -= real_representatives[party.short_name]
         leveling_seat_per_party.name = "seats"
         self.leveling_seat_per_party = leveling_seat_per_party.convert_dtypes(np.int64)
 

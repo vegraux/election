@@ -73,6 +73,8 @@ class District(Party):
         Convenience that gives pd.Series instead of pd.DataFrame as
         self.get_representatives_per_party() does
         """
+        if not self.parties:
+            return pd.Series([0], name="representatives")
         return self.get_representatives_per_party()["representatives"]
 
     @property
@@ -134,6 +136,8 @@ class District(Party):
         for _ in range(num_rep):
             parties.sort(key=lambda x: x.quotient, reverse=True)
             acquiring_party = parties[0]
+            if acquiring_party.short_name == "BLANKE":
+                acquiring_party = parties[1]
             acquiring_party.representatives += 1
 
     def get_representatives_per_party(self) -> pd.DataFrame:

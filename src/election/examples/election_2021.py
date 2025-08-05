@@ -27,4 +27,15 @@ for k, row in district_data.iterrows():
 District.set_parameters({"st_lagues_factor": st_lagues})
 Party.set_parameters({"st_lagues_factor": st_lagues})
 norway = Nation(districts=copy.deepcopy(districts))
+
+norway_no  = Nation(districts=copy.deepcopy(districts), electoral_threshold=0.00)
+
+norway_no.simulate_election()
+
 norway.simulate_election()
+
+diff = norway_no.party_representatives.sub(norway.party_representatives, fill_value=0)
+
+print(diff)
+print(diff.sum())
+print(1)
