@@ -53,6 +53,22 @@ class District(Party):
         return len(self.parties)
 
     @property
+    def percent_of_votes_per_party(self) -> pd.DataFrame:
+        return self.votes_per_party / self.district_votes * 100
+
+
+    @property
+    def votes_per_party(self) -> pd.DataFrame:
+        data = []
+        if not self.parties:
+            return pd.DataFrame()
+
+        for party in self.parties:
+            data.append({"name": party.short_name, "percent": party._votes})
+        return pd.DataFrame(data).sort_values(by="percent", ascending=False).set_index("name")
+
+
+    @property
     def votes_per_representative(self) -> float:
         """
         District factor, number of votes per representative. Used when distributing

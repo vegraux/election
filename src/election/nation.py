@@ -156,7 +156,7 @@ class Nation:
         self.leveling_seats_factors = df.sort_values(by="factor", ascending=False)
 
     def distribute_leveling_seats_to_parties(self):
-        leveling_seat_per_party = pd.DataFrame(self.leveling_seat_per_party)
+        leveling_seat_per_party = pd.DataFrame(self.leveling_seat_per_party).query("seats != 0")
         leveling_seat_per_party["acquired"] = 0
         qualifying = self.leveling_seats_factors["party"].isin(leveling_seat_per_party.index)
         factors = self.leveling_seats_factors[qualifying]
