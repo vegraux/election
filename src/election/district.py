@@ -30,10 +30,10 @@ class District(Party):
         if (area < 0) or (population < 0):
             raise ValueError("Area and population must be positive")
 
-        self._area = area
-        self._population = int(population)
+        self.area = area
+        self.population = int(population)
         self.name = name
-        self._representatives = 0
+        self.representatives = 0
         self.method = method
         self.parties: Optional[List[Party]] = None
 
@@ -42,8 +42,8 @@ class District(Party):
         Used to add area and population from different districts
         """
         district = copy.deepcopy(self)
-        district._area = self._area + other._area
-        district._population = self._population + other._population
+        district.area = self.area + other.area
+        district.population = self.population + other.population
         return district
 
     def __len__(self) -> int:
@@ -81,7 +81,7 @@ class District(Party):
         """
         Coefficient (dividend) used to distribute district representatives
         """
-        return self._area * self.parameters["area_importance"] + self._population
+        return self.area * self.parameters["area_importance"] + self.population
 
     @property
     def rep_per_party(self) -> pd.Series:
