@@ -69,16 +69,21 @@ class Party:
     def representatives(self, a):
         self._representatives = a
 
+
+    @property
+    def dividend(self) -> float:
+        if (self.method == "modified") and (self.representatives == 0):
+            return self.parameters["st_lagues_factor"]
+        else:
+            return self.parameters["divide_factor"] * self.representatives + 1
+
     @property
     def quotient(self) -> float:
         """
         Quotient that is sorted among all parties when distributing representatives
         """
-        if (self.method == "modified") and (self.representatives == 0):
-            dividend = self.parameters["st_lagues_factor"]
-        else:
-            dividend = self.parameters["divide_factor"] * self.representatives + 1
-        return self.coefficient / dividend
+
+        return self.coefficient / self.dividend
 
     def reset_representatives(self):
         """
