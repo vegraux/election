@@ -77,6 +77,7 @@ exclude = [
     ".git",
     ".git-rewrite",
     ".hg",
+    "*.ipynb",
     ".mypy_cache",
     ".nox",
     ".pants.d",

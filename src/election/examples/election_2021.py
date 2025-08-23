@@ -13,7 +13,7 @@ vote_data = pd.read_csv(path / "votes_2021.csv", sep=";")
 st_lagues = 1.4
 
 districts = []
-for k, row in district_data.iterrows():
+for _k, row in district_data.iterrows():
     district = row.iloc[0]
     district_vote_data = vote_data[vote_data["Fylkenavn"] == district]
     district_parties = []
@@ -28,14 +28,10 @@ District.set_parameters({"st_lagues_factor": st_lagues})
 Party.set_parameters({"st_lagues_factor": st_lagues})
 norway = Nation(districts=copy.deepcopy(districts))
 
-norway_no  = Nation(districts=copy.deepcopy(districts), electoral_threshold=0.00)
+norway_no = Nation(districts=copy.deepcopy(districts), electoral_threshold=0.00)
 
 norway_no.simulate_election()
 
 norway.simulate_election()
 
 diff = norway_no.party_representatives.sub(norway.party_representatives, fill_value=0)
-
-print(diff)
-print(diff.sum())
-print(1)

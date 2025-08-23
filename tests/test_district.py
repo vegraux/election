@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-
-"""
-
-"""
-
 import pytest
 
 from election.district import District
@@ -11,24 +5,20 @@ from election.party import Party
 
 
 class TestDistrict:
-    def test_county_add_representative(self, district1):
-        """
-        The division number should change when the number of representatives increase
-        """
+    def test_county_add_representative(self, district1: District):
+        """The division number should change when the number of representatives increase."""
         div_num0 = district1.quotient
         district1.representatives += 1
         div_num1 = district1.quotient
         assert div_num0 > div_num1
 
-    def test_correct_div_num_modified(self, district1):
+    def test_correct_div_num_modified(self, district1: District):
         district1.method = "modified"
-        assert (
-            district1.quotient == (1000 + 1000 * 1.8) / 1.4
-        )  # divide with 1.4 with modified version
+        assert district1.quotient == (1000 + 1000 * 1.8) / 1.4  # divide with 1.4 with modified version
         district1.representatives = 3
         assert district1.quotient == (1000 + 1000 * 1.8) / 7
 
-    def test_correct_div_num_normal(self, district1):
+    def test_correct_div_num_normal(self, district1: District):
         district1.method = "normal"
         assert district1.quotient == 1000 + 1000 * 1.8
         district1.representatives = 5
@@ -70,15 +60,15 @@ class TestDistrict:
 
         assert c1.district_votes == 500
 
-    def test_add_district_area(self, district1, district2):
-        """Checks that + operator works. Area and population should be added together"""
+    def test_add_district_area(self, district1: District, district2: District):
+        """Checks that + operator works. Area and population should be added together."""
         added_district = district1 + district2
         assert added_district.area == 1100
         assert district1.area == 1000
         assert district2.area == 100
 
-    def test_add_district_population(self, district1, district2):
-        """Checks that + operator works. Area and population should be added together"""
+    def test_add_district_population(self, district1: District, district2: District):
+        """Checks that + operator works. Area and population should be added together."""
         added_district = district1 + district2
         assert added_district.population == 1100
         assert district1.population == 1000
