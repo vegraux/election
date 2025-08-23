@@ -47,6 +47,18 @@ class Nation:
             acquiring_district.representatives += 1
         self.district_representatives = self.get_district_representatives()
 
+    @property
+    def party_votes_percentage_per_district(self) -> pd.DataFrame:
+        return pd.concat([d.percent_of_votes_per_party["percent"].rename(d.name) for d in self.districts], axis=1).fillna(0)
+
+    @property
+    def party_votes_per_district(self) -> pd.DataFrame:
+        return pd.concat([d.votes_per_party["percent"].rename(d.name) for d in self.districts], axis=1).fillna(0)
+
+    @property
+    def population_per_district(self) -> pd.DataFrame:
+        return pd.DataFrame([{"district": d.name, "population": d.population} for d in self.districts]).set_index("district")
+
     def calc_party_representatives(self):
         """
         Distributes the district representatives to a party for all districts in Nation.
