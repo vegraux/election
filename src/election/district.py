@@ -4,7 +4,6 @@
 
 """
 import copy
-from typing import List, Optional
 
 import pandas as pd
 
@@ -35,7 +34,7 @@ class District(Party):
         self.name = name
         self.representatives = 0
         self.method = method
-        self.parties: Optional[List[Party]] = None
+        self.parties: list[Party] | None = None
 
     def __add__(self, other):
         """
@@ -115,7 +114,7 @@ class District(Party):
         for party in self.parties:
             party.reset_representatives()
 
-    def append_parties(self, parties: List[Party]):
+    def append_parties(self, parties: list[Party]):
         """
         Adds parties to a county
         """
@@ -125,7 +124,7 @@ class District(Party):
             party.district = self.name
         self.parties.extend(parties)
 
-    def find_parties(self, party_names: List[str]) -> List[Party]:
+    def find_parties(self, party_names: list[str]) -> list[Party]:
         """
         Finds party instances for the given list of short names for parties
         """
@@ -144,7 +143,7 @@ class District(Party):
         self.distribute_party_representatives(self.parties, self.representatives - 1)
 
     @staticmethod
-    def distribute_party_representatives(parties: List[Party], num_rep: int):
+    def distribute_party_representatives(parties: list[Party], num_rep: int):
         """
         Iterates over a list of Party and distributes num_rep representatives.
         """
@@ -170,11 +169,11 @@ class District(Party):
 
 
 class NationDistrict(District):
-    def __init__(self, districts: List[District]):
+    def __init__(self, districts: list[District]):
         super().__init__(area=1, population=1, name="Nation")
         self.parties = self.set_national_district(districts)
 
-    def set_national_district(self, districts: List[District]) -> List[Party]:
+    def set_national_district(self, districts: list[District]) -> list[Party]:
         """
         Loops over all districts and sums the votes for each party
         """

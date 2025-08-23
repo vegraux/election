@@ -4,7 +4,6 @@
 
 """
 import copy
-from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -15,7 +14,7 @@ from election.district import District
 class Nation:
     def __init__(
         self,
-        districts: List[District] = None,
+        districts: list[District] | None = None,
         electoral_threshold: float = 0.04,
         method: str = "modified",
         tot_rep: int = 150,
@@ -24,14 +23,14 @@ class Nation:
         self.tot_rep = tot_rep
         self.districts = districts if districts is not None else []
         self.method = method
-        self.district_representatives: Optional[pd.DataFrame] = None
-        self.ordinary_party_representatives: Optional[pd.DataFrame] = None
-        self.national_district: Optional[District] = None
-        self.over_threshold_district: Optional[District] = None
-        self.under_threshold_district: Optional[District] = None
-        self.leveling_seats_factors: Optional[pd.DataFrame] = None
-        self.leveling_seat_per_party: Optional[pd.Series] = None
-        self.leveling_seats: Optional[pd.DataFrame] = None
+        self.district_representatives: pd.DataFrame | None = None
+        self.ordinary_party_representatives: pd.DataFrame | None  = None
+        self.national_district: District | None = None
+        self.over_threshold_district: District | None = None
+        self.under_threshold_district: District | None = None
+        self.leveling_seats_factors: pd.DataFrame | None = None
+        self.leveling_seat_per_party: pd.Series | None = None
+        self.leveling_seats: pd.DataFrame | None = None
 
     def calc_district_representatives(self):
         """
