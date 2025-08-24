@@ -3,6 +3,7 @@ import pathlib
 import numpy as np
 import pandas as pd
 import pytest
+from t_utils.models import RepresentativeFactory
 
 from election.district import District
 from election.nation import Nation
@@ -119,7 +120,7 @@ def district2(party_a: Party, party_b: Party) -> District:
 
 @pytest.fixture
 def parties_with_representatives(district1: District) -> list[Party]:
-    district1.representatives = 10
+    district1._representatives = [RepresentativeFactory.build() for _ in range(10)]
     district1.calc_ordinary_representatives()
     return district1.parties
 

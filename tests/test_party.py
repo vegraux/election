@@ -16,9 +16,9 @@ class TestParty:
         """Checks that + operator works. Votes and representatives should be added together."""
         party_a, party_b = parties_with_representatives
         added_parties = party_a + party_b
-        assert added_parties.representatives == 9  # 10 minus leveling seat
-        assert party_a.representatives == 6
-        assert party_b.representatives == 3
+        assert added_parties.nr_representatives == 9  # 10 minus leveling seat
+        assert party_a.nr_representatives == 6
+        assert party_b.nr_representatives == 3
 
     def test_add_parties_different_names(
         self, parties_with_representatives: list[Party], caplog: pytest.LogCaptureFixture

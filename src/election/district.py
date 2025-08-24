@@ -3,7 +3,7 @@ from typing import ClassVar, Self
 
 import pandas as pd
 
-from election.party import Party
+from election.party import Party, Representative
 
 
 class District(Party):
@@ -20,7 +20,7 @@ class District(Party):
         self.area = area
         self.population = int(population)
         self.name = name
-        self.representatives = 0
+        self._representatives = []
         self.method = method
         self.parties: list[Party] | None = None
 
@@ -52,7 +52,7 @@ class District(Party):
 
         Used when distributing leveling seats. 1 is subtracted to the leveling seat in the district.
         """
-        return self.district_votes / (self.representatives - 1)
+        return self.district_votes / (self.nr_representatives - 1)
 
     @property
     def coefficient(self) -> float:
@@ -76,7 +76,7 @@ class District(Party):
 
         Can differ from self.representatives (feature not bug, imo).
         """
-        return sum([p.representatives for p in self.parties])
+        return sum([p.nr_representatives for p in self.parties])
 
     def reset_party_representatives(self) -> None:
         """Sets distributed representatives to 0 for all parties."""
@@ -97,26 +97,27 @@ class District(Party):
 
     def add_leveling_seat(self) -> None:
         """Adds leveling seat to the county."""
-        self.representatives += 1
+        self._representatives.append(Representative(name=self.name))
 
     def calc_ordinary_representatives(self) -> None:
         """Calculates each party's representatives in the district, excluding leveling seat."""
-        self.distribute_party_representatives(self.parties, self.representatives - 1)
+        self.distribute_party_representatives(self.parties, self.nr_representatives - 1)
 
     @staticmethod
     def distribute_party_representatives(parties: list[Party], num_rep: int) -> None:
         """Iterates over a list of Party and distributes num_rep representatives."""
-        for _ in range(num_rep):
+        for nr in range(1, num_rep + 1):
             parties.sort(key=lambda x: x.quotient, reverse=True)
             acquiring_party = parties[0]
             if acquiring_party.short_name == "BLANKE":
                 acquiring_party = parties[1]
-            acquiring_party.representatives += 1
+            acquiring_party.add_representative(nr, num_rep - nr)
 
     def get_representatives_per_party(self) -> pd.DataFrame:
         """Gives DataFrame with data for short name, number of representatives and district for all parties."""
         data = [
-            {"party": p.short_name, "representatives": p.representatives, "district": p.district} for p in self.parties
+            {"party": p.short_name, "representatives": p.nr_representatives, "district": p.district}
+            for p in self.parties
         ]
         df = pd.DataFrame(data)
         return df.set_index("party")

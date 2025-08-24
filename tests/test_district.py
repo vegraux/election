@@ -1,4 +1,5 @@
 import pytest
+from t_utils.models import RepresentativeFactory
 
 from election.district import District
 from election.party import Party
@@ -8,20 +9,20 @@ class TestDistrict:
     def test_county_add_representative(self, district1: District):
         """The division number should change when the number of representatives increase."""
         div_num0 = district1.quotient
-        district1.representatives += 1
+        district1._representatives = [RepresentativeFactory.build()]
         div_num1 = district1.quotient
         assert div_num0 > div_num1
 
     def test_correct_div_num_modified(self, district1: District):
         district1.method = "modified"
         assert district1.quotient == (1000 + 1000 * 1.8) / 1.4  # divide with 1.4 with modified version
-        district1.representatives = 3
+        district1._representatives = [RepresentativeFactory.build() for _ in range(3)]
         assert district1.quotient == (1000 + 1000 * 1.8) / 7
 
     def test_correct_div_num_normal(self, district1: District):
         district1.method = "normal"
         assert district1.quotient == 1000 + 1000 * 1.8
-        district1.representatives = 5
+        district1._representatives = [RepresentativeFactory.build() for _ in range(5)]
         assert district1.quotient == (1000 + 1000 * 1.8) / 11
 
     def test_county_name_area(self):

@@ -18,7 +18,6 @@ class Nation:
         self.tot_rep = tot_rep
         self.districts = districts if districts is not None else []
         self.method = method
-        self.district_representatives: pd.DataFrame | None = None
         self.ordinary_party_representatives: pd.DataFrame | None = None
         self.national_district: District | None = None
         self.over_threshold_district: District | None = None
@@ -31,13 +30,13 @@ class Nation:
         """Distribute total national representatives to the districts."""
         for district in self.districts:
             district.reset_representatives()
+            # The leveling seat is counted for all districts. It affects the quotient
             district.add_leveling_seat()
 
-        for _ in range(self.tot_rep):
+        for nr in range(1, self.tot_rep + 1):
             self.districts.sort(key=lambda x: x.quotient, reverse=True)
             acquiring_district = self.districts[0]
-            acquiring_district.representatives += 1
-        self.district_representatives = self.get_district_representatives()
+            acquiring_district.add_representative(nr=nr, remaining_spots=self.tot_rep - nr)
 
     @property
     def party_votes_percentage_per_district(self) -> pd.DataFrame:
@@ -78,12 +77,12 @@ class Nation:
         df = pd.DataFrame(data)
         return df.set_index("name")
 
-    def get_district_representatives(self) -> pd.DataFrame:
+    @property
+    def ordinary_district_representatives(self) -> pd.DataFrame:
         """DataFrame with district representatives for all districts."""
-        self.districts.sort(key=lambda x: x.name)
-        data = [{"name": district.name, "representatives": district.representatives} for district in self.districts]
+        data = [r.model_dump() for d in self.districts for r in d.representatives if r.is_ordinary()]
         df = pd.DataFrame(data)
-        return df.set_index("name")
+        return df.set_index("name").sort_values(by="nr")
 
     @property
     def party_representatives(self) -> pd.DataFrame:
@@ -124,10 +123,10 @@ class Nation:
         """
         districts = copy.deepcopy(self.over_threshold_district)
         real_representatives = self.party_representatives.sum()
-        districts.representatives = self.get_total_rep_for_leveling_seat_calc()
+        total_rep = self.get_total_rep_for_leveling_seat_calc()
         while True:
             districts.reset_party_representatives()
-            districts.distribute_party_representatives(districts.parties, districts.representatives)
+            districts.distribute_party_representatives(districts.parties, total_rep)
             rep = districts.rep_per_party
             leveling_seat_per_party = rep.sub(real_representatives, fill_value=0).loc[rep.index]
             parties_to_remove = leveling_seat_per_party[leveling_seat_per_party < 0]
@@ -136,7 +135,7 @@ class Nation:
             for party in districts.find_parties(parties_to_remove):
                 districts.parties.remove(party)
                 if party.short_name in real_representatives:
-                    districts.representatives -= real_representatives[party.short_name]
+                    total_rep -= real_representatives[party.short_name]
         leveling_seat_per_party.name = "seats"
         self.leveling_seat_per_party = leveling_seat_per_party.convert_dtypes(np.int64)
 
@@ -206,7 +205,7 @@ class Nation:
         for district in self.districts:
             acquiring_party_name = self.leveling_seats.loc[district.name, :].idxmax()
             acquiring_party = district.find_parties(acquiring_party_name)[0]
-            acquiring_party.representatives += 1
+            acquiring_party.add_leveling_representative()
 
     def simulate_election(self) -> None:
         self.calc_ordinary_representatives()

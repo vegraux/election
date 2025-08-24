@@ -6,14 +6,16 @@ requires-python = ">=3.12"
 dynamic = ["version"]
 
 dependencies = [
-"numpy",
-"plotly",
-"dash",
-"dash-bootstrap-components",
-"seaborn",
-"gunicorn",
-"openpyxl",
-"testfixtures",
+    "numpy",
+    "plotly",
+    "dash",
+    "dash-bootstrap-components",
+    "seaborn",
+    "gunicorn",
+    "openpyxl",
+    "testfixtures",
+    "pydantic>=2.11.7",
+    "polyfactory>=2.22.1",
 ]
 
 [tool.uv]

@@ -12,12 +12,14 @@ def test_results2021_ordinary_representatives(results2021_ordinary_representativ
     )
 
 
-def test_results2021_district_representatives_count(results2021_all_representatives: pd.DataFrame, nation2021: Nation):
-    district_representatives = results2021_all_representatives.sum(axis=1)
+def test_results2021_district_representatives_count(
+    results2021_ordinary_representatives: pd.DataFrame, nation2021: Nation
+):
+    district_representatives = results2021_ordinary_representatives.sum(axis=1)
     nation2021.calc_district_representatives()
     pd.testing.assert_series_equal(
-        nation2021.district_representatives["representatives"],
-        district_representatives,
+        nation2021.ordinary_district_representatives.index.value_counts().sort_index(),
+        district_representatives.sort_index(),
         check_names=False,
     )
 

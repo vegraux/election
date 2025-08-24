@@ -2,8 +2,28 @@ import copy
 import logging
 from typing import ClassVar, Self
 
+from pydantic import BaseModel
+
 logger = logging.getLogger(__name__)
 logger.setLevel("DEBUG")
+
+
+class Representative(BaseModel):
+    name: str
+
+    @staticmethod
+    def is_ordinary() -> bool:
+        return False
+
+
+class OrdinaryRepresentative(Representative):
+    nr: int
+    remaining_representative: int
+    quotient: float
+
+    @staticmethod
+    def is_ordinary() -> bool:
+        return True
 
 
 class Party:
@@ -24,7 +44,7 @@ class Party:
         self.short_name = short_name
         self._votes = votes
         self.method = method
-        self._representatives = 0
+        self._representatives = []
 
     def __repr__(self) -> str:
         return self.name
@@ -36,12 +56,16 @@ class Party:
             logger.warning(msg)
         party = copy.deepcopy(self)
         party._votes = self._votes + other._votes
-        party.representatives = self.representatives + other.representatives
+        party._representatives = self._representatives + other._representatives
         return party
 
     @property
-    def representatives(self) -> int:
+    def representatives(self) -> list:
         return self._representatives
+
+    @property
+    def nr_representatives(self) -> int:
+        return len(self._representatives)
 
     @property
     def coefficient(self) -> int:
@@ -51,16 +75,12 @@ class Party:
         """
         return self._votes
 
-    @representatives.setter
-    def representatives(self, a: int) -> None:
-        self._representatives = a
-
     @property
     def dividend(self) -> float:
-        if (self.method == "modified") and (self.representatives == 0):
+        if (self.method == "modified") and self.nr_representatives == 0:
             return self.parameters["st_lagues_factor"]
         else:
-            return self.parameters["divide_factor"] * self.representatives + 1
+            return self.parameters["divide_factor"] * self.nr_representatives + 1
 
     @property
     def quotient(self) -> float:
@@ -69,7 +89,7 @@ class Party:
 
     def reset_representatives(self) -> None:
         """Resets the distributed representatives to 0. Used when calculating leveling seats."""
-        self.representatives = 0
+        self._representatives = []
 
     def vote_share(self, total_votes: int) -> float:
         """Party's share of total votes."""
@@ -78,3 +98,13 @@ class Party:
     def level_seat_factor(self, votes_per_representative: float) -> float:
         """Factor used to distribute leveling seat."""
         return self.quotient / votes_per_representative
+
+    def add_representative(self, nr: int, remaining_spots: int) -> None:
+        self.representatives.append(
+            OrdinaryRepresentative(
+                nr=nr, remaining_representative=remaining_spots, quotient=self.quotient, name=self.name
+            )
+        )
+
+    def add_leveling_representative(self) -> None:
+        self.representatives.append(Representative(name=self.name))
