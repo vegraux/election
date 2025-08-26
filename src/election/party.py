@@ -60,7 +60,7 @@ class Party:
         return party
 
     @property
-    def representatives(self) -> list:
+    def representatives(self) -> list[Representative]:
         return self._representatives
 
     @property
@@ -75,17 +75,16 @@ class Party:
         """
         return self._votes
 
-    @property
-    def dividend(self) -> float:
-        if (self.method == "modified") and self.nr_representatives == 0:
+    def dividend(self, nr_reps: int) -> float:
+        if (self.method == "modified") and nr_reps == 0:
             return self.parameters["st_lagues_factor"]
         else:
-            return self.parameters["divide_factor"] * self.nr_representatives + 1
+            return self.parameters["divide_factor"] * nr_reps + 1
 
     @property
     def quotient(self) -> float:
         """Quotient that is sorted among all parties when distributing representatives."""
-        return self.coefficient / self.dividend
+        return self.coefficient / self.dividend(self.nr_representatives)
 
     def reset_representatives(self) -> None:
         """Resets the distributed representatives to 0. Used when calculating leveling seats."""

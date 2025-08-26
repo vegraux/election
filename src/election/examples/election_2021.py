@@ -28,10 +28,13 @@ District.set_parameters({"st_lagues_factor": st_lagues})
 Party.set_parameters({"st_lagues_factor": st_lagues})
 norway = Nation(districts=copy.deepcopy(districts))
 
+
 norway_no = Nation(districts=copy.deepcopy(districts), electoral_threshold=0.00)
 
 norway_no.simulate_election()
 
 norway.simulate_election()
+
+df = norway.representatives_per_party
 
 diff = norway_no.party_representatives.sub(norway.party_representatives, fill_value=0)

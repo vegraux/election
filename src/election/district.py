@@ -1,9 +1,10 @@
 import copy
+import math
 from typing import ClassVar, Self
 
 import pandas as pd
 
-from election.party import Party, Representative
+from election.party import OrdinaryRepresentative, Party, Representative
 
 
 class District(Party):
@@ -21,6 +22,7 @@ class District(Party):
         self.population = int(population)
         self.name = name
         self._representatives = []
+        self.party_representatives = []
         self.method = method
         self.parties: list[Party] | None = None
 
@@ -54,6 +56,24 @@ class District(Party):
         """
         return self.district_votes / (self.nr_representatives - 1)
 
+    def calc_needed_votes_to_last_rep(self) -> pd.DataFrame:
+        """Calculate how many extra votes each party needs to win the last representative."""
+        # quotient of the last winning party
+        last_rep_quotient = self.party_representatives[-1].quotient
+
+        # q1 < q2 -> q1 < v2/d2  -> q1*d2 < v2
+        # votes needed
+        data = [
+            {
+                "party": p.name,
+                "district": self.name,
+                "quotient": p.quotient,
+                "votes_needed": math.ceil(last_rep_quotient * p.dividend(p.nr_representatives) - p._votes),
+            }
+            for p in self.parties
+        ]
+        return pd.DataFrame(data)
+
     @property
     def coefficient(self) -> float:
         """Coefficient (dividend) used to distribute district representatives."""
@@ -78,6 +98,12 @@ class District(Party):
         """
         return sum([p.nr_representatives for p in self.parties])
 
+    @property
+    def quotient_per_party(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            [{"district": self.name, "party": p.name, "quotient": p.quotient} for p in self.parties]
+        ).sort_values(by="quotient")
+
     def reset_party_representatives(self) -> None:
         """Sets distributed representatives to 0 for all parties."""
         for party in self.parties:
@@ -93,7 +119,7 @@ class District(Party):
 
     def find_parties(self, party_names: list[str]) -> list[Party]:
         """Finds party instances for the given list of short names for parties."""
-        return [p for p in self.parties if p.short_name in party_names]
+        return [p for p in self.parties if (p.short_name in party_names) or (p.name in party_names)]
 
     def add_leveling_seat(self) -> None:
         """Adds leveling seat to the county."""
@@ -101,17 +127,23 @@ class District(Party):
 
     def calc_ordinary_representatives(self) -> None:
         """Calculates each party's representatives in the district, excluding leveling seat."""
-        self.distribute_party_representatives(self.parties, self.nr_representatives - 1)
+        self.distribute_party_representatives(self.nr_representatives - 1)
 
-    @staticmethod
-    def distribute_party_representatives(parties: list[Party], num_rep: int) -> None:
-        """Iterates over a list of Party and distributes num_rep representatives."""
+    def distribute_party_representatives(self, num_rep: int) -> None:
+        """Distributes num_rep representatives to the parties in the district."""
         for nr in range(1, num_rep + 1):
-            parties.sort(key=lambda x: x.quotient, reverse=True)
-            acquiring_party = parties[0]
+            self.parties.sort(key=lambda x: x.quotient, reverse=True)
+            acquiring_party = self.parties[0]
             if acquiring_party.short_name == "BLANKE":
-                acquiring_party = parties[1]
-            acquiring_party.add_representative(nr, num_rep - nr)
+                acquiring_party = self.parties[1]
+            rep = OrdinaryRepresentative(
+                nr=nr,
+                remaining_representative=num_rep - nr,
+                quotient=acquiring_party.quotient,
+                name=acquiring_party.name,
+            )
+            acquiring_party._representatives.append(rep)
+            self.party_representatives.append(rep)
 
     def get_representatives_per_party(self) -> pd.DataFrame:
         """Gives DataFrame with data for short name, number of representatives and district for all parties."""

@@ -23,13 +23,15 @@ class Nation:
         self.over_threshold_district: District | None = None
         self.under_threshold_district: District | None = None
         self.leveling_seats_factors: pd.DataFrame | None = None
+        self.quotient_per_party_per_district: pd.DataFrame | None = None
+        self.needed_votes_to_last_rep: pd.DataFrame | None = None
         self.leveling_seat_per_party: pd.Series | None = None
         self.leveling_seats: pd.DataFrame | None = None
 
     def calc_district_representatives(self) -> None:
         """Distribute total national representatives to the districts."""
         for district in self.districts:
-            district.reset_representatives()
+            # district.reset_representatives()
             # The leveling seat is counted for all districts. It affects the quotient
             district.add_leveling_seat()
 
@@ -70,6 +72,16 @@ class Nation:
         """
         self.calc_district_representatives()
         self.calc_party_representatives()
+        self.set_needed_votes_for_last_rep()
+        self.set_quotient_per_party_per_district()
+
+    def set_needed_votes_for_last_rep(self) -> None:
+        df = pd.concat([d.calc_needed_votes_to_last_rep() for d in self.districts])
+        self.needed_votes_to_last_rep = df
+
+    def set_quotient_per_party_per_district(self) -> None:
+        """Gives quotient for all parties in all districts."""
+        self.quotient_per_party_per_district = pd.concat([d.quotient_per_party for d in self.districts])
 
     def get_district_quotient(self) -> pd.DataFrame:
         """DataFrame with quotient for all districts."""
@@ -83,6 +95,15 @@ class Nation:
         data = [r.model_dump() for d in self.districts for r in d.representatives if r.is_ordinary()]
         df = pd.DataFrame(data)
         return df.set_index("name").sort_values(by="nr")
+
+    @property
+    def representatives_per_party(self) -> pd.DataFrame:
+        """DataFrame with district representatives for all districts."""
+        data = [
+            r.model_dump() | {"district": d.name} for d in self.districts for p in d.parties for r in p.representatives
+        ]
+        df = pd.DataFrame(data)
+        return df
 
     @property
     def party_representatives(self) -> pd.DataFrame:
@@ -126,7 +147,7 @@ class Nation:
         total_rep = self.get_total_rep_for_leveling_seat_calc()
         while True:
             districts.reset_party_representatives()
-            districts.distribute_party_representatives(districts.parties, total_rep)
+            districts.distribute_party_representatives(total_rep)
             rep = districts.rep_per_party
             leveling_seat_per_party = rep.sub(real_representatives, fill_value=0).loc[rep.index]
             parties_to_remove = leveling_seat_per_party[leveling_seat_per_party < 0]
