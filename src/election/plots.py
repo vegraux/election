@@ -39,6 +39,12 @@ def get_representatives_per_district(nation: Nation) -> go.Figure:
     return fig
 
 
+def get_leveling_representatives_per_district(nation: Nation) -> go.Figure:
+    fig = px.bar(stack_data(nation.leveling_seat_representatives), x="party", y="representatives", color="district")
+    return fig
+
+
+
 def get_needed_votes(nation: Nation) -> go.Figure:
     df = nation.needed_votes_to_last_rep.sort_values(by="votes_needed").head(20)
     df["parti"] = df.apply(lambda x: f"{x.party} ({x.district})", axis=1)

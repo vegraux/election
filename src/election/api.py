@@ -55,7 +55,7 @@ class CountStats(pydantic.BaseModel):
 
 class Tidspunkt(pydantic.BaseModel):
     rapportGenerert: datetime
-    sisteStemmer: datetime
+    sisteStemmer: datetime | None
 
 
 class PartyInfo(pydantic.BaseModel):
@@ -83,7 +83,7 @@ class PartyResult(pydantic.BaseModel):
 
 class DistrictResponse(pydantic.BaseModel):
     id: DistrictInfo
-    opptalt: CountStats
+    opptalt: CountStats | None = None
     tidspunkt: Tidspunkt
     partier: list[PartyResult]
 
@@ -95,7 +95,7 @@ class DistrictResponse(pydantic.BaseModel):
 def get_nation_from_api(year: int) -> Nation:
     path = pathlib.Path(__file__).parent / "data"
 
-    district_data = pd.read_csv(path / f"area_population_{year}.csv", sep=";")
+    district_data = pd.read_csv(path / f"area_population_{year - 1}.csv", sep=";")
 
     districts = [
         District(name=row.iloc[0], population=row.iloc[1], area=row.iloc[2]) for _, row in district_data.iterrows()

@@ -111,6 +111,11 @@ class Nation:
         df = pd.DataFrame(data).reset_index(drop=True)
         return df
 
+
+    @property
+    def leveling_seat_representatives(self) -> pd.DataFrame:
+        return self.party_representatives.sub(self.ordinary_party_representatives, fill_value=0)
+
     @property
     def party_representatives(self) -> pd.DataFrame:
         """DataFrame with number of representatives for each county and party.

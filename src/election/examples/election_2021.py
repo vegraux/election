@@ -42,8 +42,8 @@ if __name__ == "__main__":
     norway_no.simulate_election()
     from election.api import get_nation_from_api
 
-    norway_api = get_nation_from_api(2021)
-    norway_api.simulate_election()
+    #norway_api = get_nation_from_api(2021)
+    #norway_api.simulate_election()
 
     df = norway.representatives_per_party
 

@@ -3,18 +3,19 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 from dash import dash_table, dcc, html
 from dash.dependencies import Input, Output
-import dash_daq as daq
 
 from flask import Flask
+from election.api import get_nation_from_api
 
-from election.examples.election_2021 import norway
+#from election.examples.election_2021 import norway
 from election.plots import get_needed_votes, get_representatives_per_district, get_representatives_per_party, \
-    get_left_vs_right
+    get_left_vs_right, get_leveling_representatives_per_district
 
 
 def create_app(debug: bool = False) -> Flask:
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.JOURNAL])
-
+    norway = get_nation_from_api(2025)
+    norway.simulate_election()
     layout = html.Div(
         [
             dbc.Row(dbc.Col(html.H1(id="header-1", children="Stortingsvalg"))),
@@ -26,7 +27,6 @@ def create_app(debug: bool = False) -> Flask:
                         [
                             html.H6("Stuff", className="card-title"),
                             dbc.Button("Refresh", id="refresh-btn", color="primary", n_clicks=0),
-                            #daq.BooleanSwitch(id='my-boolean-switch', on=True, label="Grupper data", labelPosition="top"),
 
                         ]
                     )
@@ -52,6 +52,10 @@ def create_app(debug: bool = False) -> Flask:
             dbc.Row(dbc.Col(html.H3(id="header-6", children="Prosentvis oppslutning"))),
             dash_table.DataTable(id="oppslutning-table"),
             html.Br(),
+
+            dbc.Row(dbc.Col(html.H3(id="header-7", children="Utgjevningsmandater"))),
+            dcc.Graph(id="leveling-reps-per-district-fig"),
+            html.Br(),
         ]
     )
 
@@ -61,7 +65,6 @@ def create_app(debug: bool = False) -> Flask:
     @app.callback(
         Output("reps-per-side", "figure"),
         Input("refresh-btn", "n_clicks"),
-         #Input('my-boolean-switch', 'on')
     )
     def get_side_figure(_) -> go.Figure:
         return get_left_vs_right(norway)
@@ -79,6 +82,14 @@ def create_app(debug: bool = False) -> Flask:
     )
     def get_reps_per_district(_) -> go.Figure:
         return get_representatives_per_district(norway)
+
+
+    @app.callback(
+        Output("leveling-reps-per-district-fig", "figure"),
+        Input("refresh-btn", "n_clicks"),
+    )
+    def get_leveling_reps_per_district(_) -> go.Figure:
+        return get_leveling_representatives_per_district(norway)
 
     @app.callback(
         Output("needed-votes-fig", "figure"),
