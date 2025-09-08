@@ -2,7 +2,7 @@
 name = "election"
 description = "Python application for analysis of the Norwegian election"
 authors = [{name="Vegard Solberg", email="vegardsolberg@hotmail.com"}]
-requires-python = ">=3.12"
+requires-python = "==3.11.6"
 dynamic = ["version"]
 
 dependencies = [
@@ -14,8 +14,10 @@ dependencies = [
     "gunicorn",
     "openpyxl",
     "testfixtures",
-    "pydantic>=2.11.7",
-    "polyfactory>=2.22.1",
+    "pydantic",
+    "httpx",
+    #"polyfactory",
+    "dash-daq>=0.6.0",
 ]
 
 [tool.uv]
@@ -24,7 +26,7 @@ dev-dependencies = [
     "pytest-cov",
     "pytest-integration",
     "coverage",
-    "polyfactory>=2.18.0",
+    #"polyfactory>=2.18.0",
 ]
 
 [tool.setuptools_scm]

@@ -1,10 +1,11 @@
 import copy
-import math
 from typing import ClassVar, Self
 
 import pandas as pd
 
 from election.party import OrdinaryRepresentative, Party, Representative
+
+NON_PARTIES = ["BLANKE", "Andre", "Andre2"]
 
 
 class District(Party):
@@ -68,7 +69,7 @@ class District(Party):
                 "party": p.name,
                 "district": self.name,
                 "quotient": p.quotient,
-                "votes_needed": math.ceil(last_rep_quotient * p.dividend(p.nr_representatives) - p._votes),
+                "votes_needed": last_rep_quotient * p.dividend(p.nr_representatives) - p._votes,
             }
             for p in self.parties
         ]
@@ -134,7 +135,7 @@ class District(Party):
         for nr in range(1, num_rep + 1):
             self.parties.sort(key=lambda x: x.quotient, reverse=True)
             acquiring_party = self.parties[0]
-            if acquiring_party.short_name == "BLANKE":
+            if acquiring_party.short_name in NON_PARTIES:
                 acquiring_party = self.parties[1]
             rep = OrdinaryRepresentative(
                 nr=nr,

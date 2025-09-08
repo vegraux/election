@@ -76,7 +76,7 @@ class Nation:
         self.set_quotient_per_party_per_district()
 
     def set_needed_votes_for_last_rep(self) -> None:
-        df = pd.concat([d.calc_needed_votes_to_last_rep() for d in self.districts])
+        df = pd.concat([d.calc_needed_votes_to_last_rep() for d in self.districts]).reset_index(drop=True)
         self.needed_votes_to_last_rep = df
 
     def set_quotient_per_party_per_district(self) -> None:
@@ -97,12 +97,18 @@ class Nation:
         return df.set_index("name").sort_values(by="nr")
 
     @property
+    def order_of_party_representatives(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            [r.model_dump() | {"district": d.name} for d in self.districts for r in d.party_representatives]
+        )
+
+    @property
     def representatives_per_party(self) -> pd.DataFrame:
         """DataFrame with district representatives for all districts."""
         data = [
             r.model_dump() | {"district": d.name} for d in self.districts for p in d.parties for r in p.representatives
         ]
-        df = pd.DataFrame(data)
+        df = pd.DataFrame(data).reset_index(drop=True)
         return df
 
     @property
@@ -120,6 +126,13 @@ class Nation:
         df = df.reindex(sorted(df.columns), axis=1)
         df = df.reindex(sorted(df.index), axis=0)
         return df
+
+
+    @property
+    def party_percentage(self):
+        df = 100 * (self.party_votes_per_district.sum(axis=1) / self.party_votes_per_district.sum().sum())
+        df = df.reset_index().rename(columns={0: "oppslutning"})
+        return df.sort_values(by="oppslutning", ascending=False)
 
     def set_threshold_parties(self) -> None:
         """Sets District instances for parties over and under the defined electoral threshold."""
